@@ -355,9 +355,10 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 				param.setPictureSize(pictureSize.width, pictureSize.height);
 			}
 		}
-		if (this.targetHeight != 0 && this.targetWidth != 0) {
+		Log.i(TAG, "right before PASCameraActivity.targetHeight !=0 on line 358");
+		if (PASCameraActivity.targetHeight != 0 && PASCameraActivity.targetWidth != 0) {
 			Log.i(TAG, "setting desired height/width");
-			Camera.Size targetDesiredSize = setDesiredPictureSize(this.targetWidth, this.targetHeight);
+			Camera.Size targetDesiredSize = setDesiredPictureSize(PASCameraActivity.targetWidth, PASCameraActivity.targetHeight);
 			if(targetDesiredSize != null) {
 				Log.i(TAG, "setting desired height/width");
 				param.setPictureSize(targetDesiredSize.width, targetDesiredSize.height);

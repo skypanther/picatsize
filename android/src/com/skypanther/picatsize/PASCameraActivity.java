@@ -74,8 +74,8 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 	public static boolean autohide = true;
 	public List<Size> supportedPictureSizes;
 	public Size desiredPictureSize;
-	public static int targetPictureHeight;
-	public static int targetPictureWidth;
+	public int targetHeight;
+	public int targetWidth;
 
 	private static class PreviewLayout extends FrameLayout
 	{
@@ -355,9 +355,9 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 				param.setPictureSize(pictureSize.width, pictureSize.height);
 			}
 		}
-		if (this.targetPictureHeight != 0 && this.targetPictureWidth != 0) {
-			Log.i(TAG, "target height/width exist");
-			Camera.Size targetDesiredSize = setDesiredPictureSize(param, this.targetPictureWidth, this.targetPictureHeight);
+		if (this.targetHeight != 0 && this.targetWidth != 0) {
+			Log.i(TAG, "setting desired height/width");
+			Camera.Size targetDesiredSize = setDesiredPictureSize(this.targetWidth, this.targetHeight);
 			if(targetDesiredSize != null) {
 				Log.i(TAG, "setting desired height/width");
 				param.setPictureSize(targetDesiredSize.width, targetDesiredSize.height);
@@ -533,11 +533,12 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 	 * @param height
 	 *            (int) desired height of the image
 	 */
-	static public Camera.Size setDesiredPictureSize(Parameters param, int width, int height)
+	static public Camera.Size setDesiredPictureSize(int width, int height)
 	{
 		Log.i(TAG, "setDesiredPictureSize(" + String.valueOf(width) + ", " + String.valueOf(height) + ")");
 		try {
-			List<Camera.Size> pictSizes = param.getSupportedPictureSizes();
+			Parameters params = camera.getParameters();
+			List<Camera.Size> pictSizes = params.getSupportedPictureSizes();
 			Log.i(TAG, "got sizes");
 			if(pictSizes == null || pictSizes.size() == 0) {
 				Log.i(TAG, "no sizes or pictSizes is null or something");

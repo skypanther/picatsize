@@ -74,7 +74,8 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 	public static boolean autohide = true;
 	public List<Size> supportedPictureSizes;
 	public Size desiredPictureSize;
-	public Size targetPictureSize; // will be >= desiredPictureSize
+	public static int targetPictureHeight;
+	public static int targetPictureWidth;
 
 	private static class PreviewLayout extends FrameLayout
 	{
@@ -354,8 +355,13 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 				param.setPictureSize(pictureSize.width, pictureSize.height);
 			}
 		}
-		if (this.targetPictureSize != null) {
-			param.setPictureSize(this.targetPictureSize.width, this.targetPictureSize.height);
+		if (this.targetPictureHeight != 0 && this.targetPictureWidth != 0) {
+			Log.i(TAG, "target height/width exist");
+			Camera.Size targetDesiredSize = setDesiredPictureSize(param, this.targetPictureWidth, this.targetPictureHeight);
+			if(targetDesiredSize != null) {
+				Log.i(TAG, "setting desired height/width");
+				param.setPictureSize(targetDesiredSize.width, targetDesiredSize.height);
+			}
 		}
 		camera.setParameters(param);
 
@@ -520,46 +526,51 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 	/**
 	 * Specifies the desired image size for photos. The closest, larger, supported size, will be used.
 	 * 
+	 * @param param
+	 *            (Parameters) Camera.Parameters instance
 	 * @param width
 	 *            (int) desired width of the image
 	 * @param height
 	 *            (int) desired height of the image
 	 */
-	static public void setDesiredPictureSize(int width, int height)
+	static public Camera.Size setDesiredPictureSize(Parameters param, int width, int height)
 	{
 		Log.i(TAG, "setDesiredPictureSize(" + String.valueOf(width) + ", " + String.valueOf(height) + ")");
-		List<Size> pictSizes = camera.getParameters().getSupportedPictureSizes();
-		Log.i(TAG, "got sizes");
-		if(pictSizes == null || pictSizes.size() == 0) {
-			Log.i(TAG, "no sizes or pictSizes is null or something");
-			return;
-		}
-
-		// sort sizes in ascending order
-		Log.i(TAG, "about to sort");
-		Collections.sort(pictSizes, new Comparator<Camera.Size>() {
-			public int compare(final Camera.Size a, final Camera.Size b) {
-				Log.i(TAG, "sorting");
-				return a.width * a.height - b.width * b.height;
+		try {
+			List<Camera.Size> pictSizes = param.getSupportedPictureSizes();
+			Log.i(TAG, "got sizes");
+			if(pictSizes == null || pictSizes.size() == 0) {
+				Log.i(TAG, "no sizes or pictSizes is null or something");
+				return null;
 			}
-		});
 
-		// loop through and grab the smallest supported size that is larger than the desired size
-		Camera.Size theClosestSupportedSize = null;
-		Log.i(TAG, "looking for best fit");
-		for (Camera.Size size : pictSizes) {
-			if (size.width >= width && size.height >= height && theClosestSupportedSize == null) {
-				theClosestSupportedSize=size;
+			// sort sizes in ascending order
+			Log.i(TAG, "about to sort");
+			Collections.sort(pictSizes, new Comparator<Camera.Size>() {
+				public int compare(final Camera.Size a, final Camera.Size b) {
+					Log.i(TAG, "sorting");
+					return a.width * a.height - b.width * b.height;
+				}
+			});
+
+			// loop through and grab the smallest supported size that is larger than the desired size
+			Camera.Size theClosestSupportedSize = null;
+			Log.i(TAG, "looking for best fit");
+			for (Camera.Size size : pictSizes) {
+				if (size.width >= width && size.height >= height && theClosestSupportedSize == null) {
+					theClosestSupportedSize=size;
+				}
 			}
+			if(theClosestSupportedSize == null) {
+				// desired was bigger than max size supported, to take the largest supported size
+				theClosestSupportedSize = pictSizes.get(pictSizes.size() - 1);
+			}
+			Log.i(TAG, "about to return sizes");
+			return theClosestSupportedSize;
+		} catch (Throwable t) {
+			Log.e(TAG, "Could not set picture size", t);
+			return null;
 		}
-		if(theClosestSupportedSize == null) {
-			// desired was bigger than max size supported, to take the largest supported size
-			theClosestSupportedSize = pictSizes.get(pictSizes.size() - 1);
-		}
-		Log.i(TAG, "about to return sizes");
-		camera.getParameters().setPictureSize(theClosestSupportedSize.width, theClosestSupportedSize.height);
-		camera.setParameters(camera.getParameters());
-
 	}
 
 	public boolean isPreviewRunning()

@@ -174,8 +174,6 @@ public class PicatsizeModule extends KrollModule
 		KrollFunction cancelCallback = null;
 		KrollFunction errorCallback = null;
 		boolean saveToPhotoGallery = false;
-		int targetHeight;
-		int targetWidth;
 		
 		if (cameraOptions.containsKeyAndNotNull(TiC.PROPERTY_SUCCESS)) {
 			successCallback = (KrollFunction) cameraOptions.get(TiC.PROPERTY_SUCCESS);
@@ -191,12 +189,10 @@ public class PicatsizeModule extends KrollModule
 		}
 		if (cameraOptions.containsKeyAndNotNull("targetHeight") && cameraOptions.containsKeyAndNotNull("targetWidth")) {
 			Log.i(TAG, "Setting height and width, height = " + String.valueOf(cameraOptions.getInt("targetHeight")));
-			targetHeight = cameraOptions.getInt("targetHeight");
-			targetWidth = cameraOptions.getInt("targetWidth");
-			PASCameraActivity.setDesiredPictureSize(targetWidth, targetHeight);
+			PASCameraActivity.targetPictureHeight = cameraOptions.getInt("targetHeight");
+			PASCameraActivity.targetPictureWidth = cameraOptions.getInt("targetWidth");
+			//PASCameraActivity.setTargetSizes(cameraOptions.getInt("targetHeight"), cameraOptions.getInt("targetWidth"));
 		}
-		
-		
 		
 		//Create an output file irrespective of whether saveToGallery 
 		//is true or false. If false, we'll delete it later
@@ -262,8 +258,6 @@ public class PicatsizeModule extends KrollModule
 		
 		int flashMode = CAMERA_FLASH_OFF;
 		int whichCamera = CAMERA_REAR;
-		int targetHeight;
-		int targetWidth;
 		
 		if (cameraOptions.containsKeyAndNotNull(TiC.PROPERTY_SUCCESS)) {
 			successCallback = (KrollFunction) cameraOptions.get(TiC.PROPERTY_SUCCESS);
@@ -288,9 +282,9 @@ public class PicatsizeModule extends KrollModule
 		}
 		if (cameraOptions.containsKeyAndNotNull("targetHeight") && cameraOptions.containsKeyAndNotNull("targetWidth")) {
 			Log.i(TAG, "Setting height and width, height = " + String.valueOf(cameraOptions.getInt("targetHeight")));
-			targetHeight = cameraOptions.getInt("targetHeight");
-			targetWidth = cameraOptions.getInt("targetWidth");
-			PASCameraActivity.setDesiredPictureSize(targetWidth, targetHeight);
+			PASCameraActivity.targetPictureHeight = cameraOptions.getInt("targetHeight");
+			PASCameraActivity.targetPictureWidth = cameraOptions.getInt("targetWidth");
+			//PASCameraActivity.setTargetSizes(cameraOptions.getInt("targetHeight"), cameraOptions.getInt("targetWidth"));
 		}
 		
 		PASCameraActivity.callbackContext = getKrollObject();
@@ -759,13 +753,20 @@ public class PicatsizeModule extends KrollModule
 		}
 	}
 
-	@Kroll.method
+/*	@Kroll.method
 	@Kroll.setProperty
-	public void setDesiredPictureSize(int width, int height)
+	public void setDesiredPictureSize(Parameters param, int width, int height)
 	{
-		PASCameraActivity.setDesiredPictureSize(width, height);
-	}
+		if (param != null) {
+			Camera.Size targetDesiredSize = PASCameraActivity.setDesiredPictureSize(param, this.targetPictureSize.width, this.targetPictureSize.height);
+			if(targetDesiredSize != null) {
+				param.setPictureSize(targetDesiredSize.width, targetDesiredSize.height);
+			}
+		}
 
+		PASCameraActivity.setDesiredPictureSize(param, width, height);
+	}
+*/
 	@Kroll.method
 	@Kroll.setProperty
 	public void setCameraFlashMode(int flashMode)

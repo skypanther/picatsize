@@ -74,8 +74,8 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 	public static boolean autohide = true;
 	public List<Size> supportedPictureSizes;
 	public Size desiredPictureSize;
-	public int targetHeight;
-	public int targetWidth;
+	public static int targetHeight;
+	public static int targetWidth;
 
 	private static class PreviewLayout extends FrameLayout
 	{

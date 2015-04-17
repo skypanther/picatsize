@@ -229,12 +229,14 @@ public class PicatsizeModule extends KrollModule
 		}
 		
 		//Create Intent
+		Activity activity = TiApplication.getInstance().getCurrentActivity();
+
 		Uri fileUri = Uri.fromFile(imageFile); // create a file to save the image
-		Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+		Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE, null, (Context)activity, PASCameraActivity.class);
 		intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
 		
 		//Setup CameraResultHandler
-		Activity activity = TiApplication.getInstance().getCurrentActivity();
+		
 		TiActivitySupport activitySupport = (TiActivitySupport) activity;
 
 		CameraResultHandler resultHandler = new CameraResultHandler();

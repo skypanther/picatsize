@@ -139,6 +139,7 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
+		Log.i(TAG, "onCreate called");
 		setFullscreen(true);
 		
 		super.onCreate(savedInstanceState);
@@ -195,6 +196,7 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 	@Override
 	protected void onResume()
 	{
+		Log.i(TAG, "onResume called");
 		super.onResume();
 		if (camera == null) {
 
@@ -277,7 +279,9 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 
 	private void startPreview(SurfaceHolder previewHolder)
 	{
+		Log.i(TAG, "startPreview called");
 		if (camera == null) {
+			Log.i(TAG, "but camera is null");
 			return;
 		}
 
@@ -664,11 +668,13 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 
 	private void openCamera()
 	{
+		Log.i(TAG, "openCamera() called");
 		openCamera(Integer.MIN_VALUE);
 	}
 
 	private void openCamera(int cameraId)
 	{
+		Log.i(TAG, "openCamera(int) called");
 		if (previewRunning) {
 			stopPreview();
 		}

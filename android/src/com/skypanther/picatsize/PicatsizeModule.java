@@ -46,6 +46,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.net.Uri;
@@ -174,8 +175,8 @@ public class PicatsizeModule extends KrollModule
 		KrollFunction cancelCallback = null;
 		KrollFunction errorCallback = null;
 		boolean saveToPhotoGallery = false;
-		int targetHeight = 0;
-		int targetWidth = 0;
+		
+		Log.d(TAG, "launchNativeCamera");
 		
 		if (cameraOptions.containsKeyAndNotNull(TiC.PROPERTY_SUCCESS)) {
 			successCallback = (KrollFunction) cameraOptions.get(TiC.PROPERTY_SUCCESS);
@@ -190,11 +191,10 @@ public class PicatsizeModule extends KrollModule
 			saveToPhotoGallery = cameraOptions.getBoolean("saveToPhotoGallery");
 		}
 		if (cameraOptions.containsKeyAndNotNull("targetHeight") && cameraOptions.containsKeyAndNotNull("targetWidth")) {
-			Log.i(TAG, "193: Setting height and width, height = " + String.valueOf(cameraOptions.getInt("targetHeight")) + ", width= " + String.valueOf(cameraOptions.getInt("targetWidth")));
-			PASCameraActivity.targetHeight = cameraOptions.getInt("targetHeight");
-			PASCameraActivity.targetWidth = cameraOptions.getInt("targetWidth");
-			//targetHeight = cameraOptions.getInt("targetHeight");
-			//targetWidth = cameraOptions.getInt("targetWidth");
+			Log.i(TAG, "Setting height and width, height = " + String.valueOf(cameraOptions.getInt("targetHeight")));
+			PASCameraActivity.targetPictureHeight = cameraOptions.getInt("targetHeight");
+			PASCameraActivity.targetPictureWidth = cameraOptions.getInt("targetWidth");
+			//PASCameraActivity.setTargetSizes(cameraOptions.getInt("targetHeight"), cameraOptions.getInt("targetWidth"));
 		}
 		
 		//Create an output file irrespective of whether saveToGallery 
@@ -229,14 +229,12 @@ public class PicatsizeModule extends KrollModule
 		}
 		
 		//Create Intent
-		Activity activity = TiApplication.getInstance().getCurrentActivity();
-
 		Uri fileUri = Uri.fromFile(imageFile); // create a file to save the image
-		Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE, null, (Context)activity, PASCameraActivity.class);
+		Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 		intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
 		
 		//Setup CameraResultHandler
-		
+		Activity activity = TiApplication.getInstance().getCurrentActivity();
 		TiActivitySupport activitySupport = (TiActivitySupport) activity;
 
 		CameraResultHandler resultHandler = new CameraResultHandler();
@@ -248,10 +246,6 @@ public class PicatsizeModule extends KrollModule
 		resultHandler.saveToPhotoGallery = saveToPhotoGallery;
 		resultHandler.activitySupport = activitySupport;
 		resultHandler.lastImageId = getLastImageId(activity);
-		//if(targetHeight > 0 && targetWidth > 0) {
-		//	resultHandler.targetHeight = targetHeight;
-		//	resultHandler.targetWidth = targetWidth;
-		//}
 		activity.runOnUiThread(resultHandler);
 		
 		
@@ -264,8 +258,6 @@ public class PicatsizeModule extends KrollModule
 		KrollFunction errorCallback = null;
 		boolean saveToPhotoGallery = false;
 		boolean autohide = true;
-		int targetHeight = 0;
-		int targetWidth = 0;
 		
 		int flashMode = CAMERA_FLASH_OFF;
 		int whichCamera = CAMERA_REAR;
@@ -292,11 +284,9 @@ public class PicatsizeModule extends KrollModule
 			whichCamera = cameraOptions.getInt(PROP_WHICH_CAMERA);
 		}
 		if (cameraOptions.containsKeyAndNotNull("targetHeight") && cameraOptions.containsKeyAndNotNull("targetWidth")) {
-			Log.i(TAG, "291: Setting height and width, height = " + String.valueOf(cameraOptions.getInt("targetHeight")) + ", width= " + String.valueOf(cameraOptions.getInt("targetWidth")));
-			PASCameraActivity.targetHeight = cameraOptions.getInt("targetHeight");
-			PASCameraActivity.targetWidth = cameraOptions.getInt("targetWidth");
-			//targetHeight = cameraOptions.getInt("targetHeight");
-			//targetWidth = cameraOptions.getInt("targetWidth");
+			Log.i(TAG, "Setting height and width, height = " + String.valueOf(cameraOptions.getInt("targetHeight")));
+			PASCameraActivity.targetPictureHeight = cameraOptions.getInt("targetHeight");
+			PASCameraActivity.targetPictureWidth = cameraOptions.getInt("targetWidth");
 		}
 		
 		PASCameraActivity.callbackContext = getKrollObject();
@@ -308,10 +298,6 @@ public class PicatsizeModule extends KrollModule
 		PASCameraActivity.overlayProxy = overLayProxy;
 		PASCameraActivity.whichCamera = whichCamera;
 		PASCameraActivity.setFlashMode(flashMode);
-		//if(targetHeight > 0 && targetWidth > 0) {
-		//	PASCameraActivity.targetHeight = targetHeight;
-		//	PASCameraActivity.targetWidth = targetWidth;
-		//}
 		
 		//Create Intent and Launch
 		Activity activity = TiApplication.getInstance().getCurrentActivity();
@@ -539,8 +525,7 @@ public class PicatsizeModule extends KrollModule
 		protected Intent cameraIntent;
 		protected int lastImageId;
 		private boolean validFileCreated;
-		protected int targetHeight;
-		protected int targetWidth;
+		protected Point desiredTargetSize;
 
 		//Validates if the file is a valid bitmap
 		private void validateFile() throws Throwable

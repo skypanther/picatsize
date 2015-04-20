@@ -1,5 +1,6 @@
 <Alloy>
 	<Window class="container">
-		<Label id="label" onClick="doClick">Click me</Label>
+		<Button id="openCameraActivity" onClick="openCameraActivity">Show Camera w/overlay</Button>
+        <Button id="openNativeCamera" onClick="openNativeCamera">Show native camera</Button>
 	</Window>
 </Alloy>

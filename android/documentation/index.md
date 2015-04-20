@@ -2,38 +2,16 @@
 
 ## Description
 
-TODO: Enter your module description here
+PicAtSize is an Android module that lets you take a "_PIC_&#65279;ture _AT_ a _SIZE_" you specify. 
 
-## Accessing the picatsize Module
+## How to use:
 
-To access this module from JavaScript, you would do the following:
-
-    var picatsize = require("com.skypanther.picatsize");
-
-The picatsize variable is a reference to the Module object.
-
-## Reference
-
-TODO: If your module has an API, you should document
-the reference here.
-
-### picatsize.function
-
-TODO: This is an example of a module function.
-
-### picatsize.property
-
-TODO: This is an example of a module property.
-
-## Usage
-
-TODO: Enter your usage example here
+See the main README file and the example application for usage info.
 
 ## Author
 
-TODO: Enter your author name, email and other contact
-details you want to share here.
+@skypanther
 
 ## License
 
-TODO: Enter your license/legal information here.
+Apache License, Version 2.0

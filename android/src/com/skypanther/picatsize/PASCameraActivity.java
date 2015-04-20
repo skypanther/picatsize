@@ -74,8 +74,8 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 	public static boolean autohide = true;
 	public List<Size> supportedPictureSizes;
 	public Size desiredPictureSize;
-	public static int targetHeight;
-	public static int targetWidth;
+	public static int targetPictureHeight = 0;
+	public static int targetPictureWidth = 0;
 
 	private static class PreviewLayout extends FrameLayout
 	{
@@ -139,7 +139,6 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
-		Log.i(TAG, "onCreate called");
 		setFullscreen(true);
 		
 		super.onCreate(savedInstanceState);
@@ -196,7 +195,6 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 	@Override
 	protected void onResume()
 	{
-		Log.i(TAG, "onResume called");
 		super.onResume();
 		if (camera == null) {
 
@@ -258,6 +256,8 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 			}
 		}
 	}
+	
+
 
 	@Override
 	protected void onPause(){
@@ -279,9 +279,7 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 
 	private void startPreview(SurfaceHolder previewHolder)
 	{
-		Log.i(TAG, "startPreview called");
 		if (camera == null) {
-			Log.i(TAG, "but camera is null");
 			return;
 		}
 
@@ -359,16 +357,11 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 				param.setPictureSize(pictureSize.width, pictureSize.height);
 			}
 		}
-		Log.i(TAG, "right before PASCameraActivity.targetHeight !=0 on line 358");
-		if (PASCameraActivity.targetHeight != 0 && PASCameraActivity.targetWidth != 0) {
-			Log.i(TAG, "setting desired height/width");
-			Camera.Size targetDesiredSize = setDesiredPictureSize(PASCameraActivity.targetWidth, PASCameraActivity.targetHeight);
-			if(targetDesiredSize != null) {
-				Log.i(TAG, "setting desired height/width");
-				param.setPictureSize(targetDesiredSize.width, targetDesiredSize.height);
-			}
-		}
+		
 		camera.setParameters(param);
+		if (targetPictureWidth != 0 && targetPictureHeight != 0) {
+			setDesiredPictureSize(param, targetPictureWidth, targetPictureHeight);
+		}
 
 		try {
 			camera.setPreviewDisplay(previewHolder);
@@ -538,16 +531,18 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 	 * @param height
 	 *            (int) desired height of the image
 	 */
-	static public Camera.Size setDesiredPictureSize(int width, int height)
+	public void setDesiredPictureSize(Parameters param, int width, int height)
 	{
 		Log.i(TAG, "setDesiredPictureSize(" + String.valueOf(width) + ", " + String.valueOf(height) + ")");
+		if (camera == null) {
+			return;
+		}
 		try {
-			Parameters params = camera.getParameters();
-			List<Camera.Size> pictSizes = params.getSupportedPictureSizes();
+			List<Camera.Size> pictSizes = param.getSupportedPictureSizes();
 			Log.i(TAG, "got sizes");
 			if(pictSizes == null || pictSizes.size() == 0) {
 				Log.i(TAG, "no sizes or pictSizes is null or something");
-				return null;
+				return;
 			}
 
 			// sort sizes in ascending order
@@ -572,10 +567,13 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 				theClosestSupportedSize = pictSizes.get(pictSizes.size() - 1);
 			}
 			Log.i(TAG, "about to return sizes");
-			return theClosestSupportedSize;
+			
+			param.setPictureSize(theClosestSupportedSize.width, theClosestSupportedSize.height);
+			camera.setParameters(param);
+			
 		} catch (Throwable t) {
 			Log.e(TAG, "Could not set picture size", t);
-			return null;
+			return;
 		}
 	}
 
@@ -668,13 +666,11 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 
 	private void openCamera()
 	{
-		Log.i(TAG, "openCamera() called");
 		openCamera(Integer.MIN_VALUE);
 	}
 
 	private void openCamera(int cameraId)
 	{
-		Log.i(TAG, "openCamera(int) called");
 		if (previewRunning) {
 			stopPreview();
 		}

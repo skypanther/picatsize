@@ -499,25 +499,30 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 		}
 	}
 
-	static public void takePicture()
-	{
-		String focusMode = camera.getParameters().getFocusMode();
-		if (!(focusMode.equals(Parameters.FOCUS_MODE_EDOF) || focusMode.equals(Parameters.FOCUS_MODE_FIXED) || focusMode
-			.equals(Parameters.FOCUS_MODE_INFINITY))) {
-			AutoFocusCallback focusCallback = new AutoFocusCallback()
-			{
-				public void onAutoFocus(boolean success, Camera camera)
+	static public void takePicture() {
+		try {
+			String focusMode = camera.getParameters().getFocusMode();
+			if (!(focusMode.equals(Parameters.FOCUS_MODE_EDOF) || focusMode.equals(Parameters.FOCUS_MODE_FIXED) || focusMode
+				.equals(Parameters.FOCUS_MODE_INFINITY))) {
+				AutoFocusCallback focusCallback = new AutoFocusCallback()
 				{
-					camera.takePicture(shutterCallback, null, jpegCallback);
-					if (!success) {
-						Log.w(TAG, "Unable to focus.");
+					public void onAutoFocus(boolean success, Camera camera)
+					{
+						camera.takePicture(shutterCallback, null, jpegCallback);
+						if (!success) {
+							Log.w(TAG, "Unable to focus.");
+						}
+						camera.cancelAutoFocus();
 					}
-					camera.cancelAutoFocus();
-				}
-			};
-			camera.autoFocus(focusCallback);
-		} else {
-			camera.takePicture(shutterCallback, null, jpegCallback);
+				};
+				camera.autoFocus(focusCallback);
+			} else {
+				camera.takePicture(shutterCallback, null, jpegCallback);
+			}
+		} catch (Exception e) {
+			if (camera != null) {
+				camera.release();
+			}
 		}
 	}
 
@@ -549,7 +554,7 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 			Log.i(TAG, "about to sort");
 			Collections.sort(pictSizes, new Comparator<Camera.Size>() {
 				public int compare(final Camera.Size a, final Camera.Size b) {
-					Log.i(TAG, "sorting");
+					Log.i(TAG, "sorting Size: w:" + a.width + " h:" + a.height);
 					return a.width * a.height - b.width * b.height;
 				}
 			});

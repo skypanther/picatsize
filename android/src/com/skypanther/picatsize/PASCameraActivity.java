@@ -683,9 +683,13 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 			stopPreview();
 		}
 
-		if (camera != null) {
-			camera.release();
-			camera = null;
+		try {
+			if (camera != null) {
+				camera.release();
+				camera = null;
+			}
+		} catch (Exception e) {
+			Log.e(TAG, e.getMessage());
 		}
 
 		if (cameraId == Integer.MIN_VALUE) {

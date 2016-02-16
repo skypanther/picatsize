@@ -253,6 +253,9 @@ public class PicatsizeModule extends KrollModule
 	
 	
 	private void launchCameraActivity(KrollDict cameraOptions, TiViewProxy overLayProxy) {
+
+		System.out.println("launch Camera Activity");
+		
 		KrollFunction successCallback = null;
 		KrollFunction cancelCallback = null;
 		KrollFunction errorCallback = null;

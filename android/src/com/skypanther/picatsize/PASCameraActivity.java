@@ -36,6 +36,7 @@ import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.ShutterCallback;
 import android.hardware.Camera.Size;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.view.Gravity;
@@ -46,8 +47,10 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 
+@SuppressWarnings("deprecation")
 public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.Callback
 {
 	private static final String TAG = "PASCameraActivity";
@@ -139,9 +142,13 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
-		setFullscreen(true);
+		// setting Fullscreen
+		getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		
 		super.onCreate(savedInstanceState);
+
+		// checks if device has only front facing camera and sets it
+		checkWhichCameraAsDefault();
 
 		// create camera preview
 		preview = new SurfaceView(this);
@@ -160,7 +167,6 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 			LayoutParams.MATCH_PARENT, Gravity.CENTER));
 
 		setContentView(cameraLayout);
-
 	}
 
 	public void surfaceChanged(SurfaceHolder previewHolder, int format, int width, int height)
@@ -638,6 +644,19 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 		}
 	};
 
+	private void checkWhichCameraAsDefault(){
+		// This is to check if device has only front facing camera
+		// TIMOB-15812: Fix for Devices like Nexus 7 (2012) that only
+		// has front facing camera and no rear camera.
+		PASCameraActivity.getFrontCameraId();
+		PASCameraActivity.getBackCameraId();
+		if (backCameraId == Integer.MIN_VALUE && frontCameraId != Integer.MIN_VALUE) {
+			PASCameraActivity.whichCamera = PicatsizeModule.CAMERA_FRONT;
+		} else {
+			PASCameraActivity.whichCamera = PicatsizeModule.CAMERA_REAR;
+		}
+	}
+
 	private static int getFrontCameraId()
 	{
 		if (frontCameraId == Integer.MIN_VALUE) {
@@ -683,13 +702,9 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 			stopPreview();
 		}
 
-		try {
-			if (camera != null) {
-				camera.release();
-				camera = null;
-			}
-		} catch (Exception e) {
-			Log.e(TAG, e.getMessage());
+		if (camera != null) {
+			camera.release();
+			camera = null;
 		}
 
 		if (cameraId == Integer.MIN_VALUE) {

@@ -36,6 +36,7 @@ import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.ShutterCallback;
 import android.hardware.Camera.Size;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.view.Gravity;
@@ -46,8 +47,10 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 
+@SuppressWarnings("deprecation")
 public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.Callback
 {
 	private static final String TAG = "PASCameraActivity";
@@ -139,9 +142,13 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
-		setFullscreen(true);
+		// setting Fullscreen
+		getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		
 		super.onCreate(savedInstanceState);
+
+		// checks if device has only front facing camera and sets it
+		checkWhichCameraAsDefault();
 
 		// create camera preview
 		preview = new SurfaceView(this);
@@ -160,7 +167,6 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 			LayoutParams.MATCH_PARENT, Gravity.CENTER));
 
 		setContentView(cameraLayout);
-
 	}
 
 	public void surfaceChanged(SurfaceHolder previewHolder, int format, int width, int height)
@@ -499,25 +505,30 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 		}
 	}
 
-	static public void takePicture()
-	{
-		String focusMode = camera.getParameters().getFocusMode();
-		if (!(focusMode.equals(Parameters.FOCUS_MODE_EDOF) || focusMode.equals(Parameters.FOCUS_MODE_FIXED) || focusMode
-			.equals(Parameters.FOCUS_MODE_INFINITY))) {
-			AutoFocusCallback focusCallback = new AutoFocusCallback()
-			{
-				public void onAutoFocus(boolean success, Camera camera)
+	static public void takePicture() {
+		try {
+			String focusMode = camera.getParameters().getFocusMode();
+			if (!(focusMode.equals(Parameters.FOCUS_MODE_EDOF) || focusMode.equals(Parameters.FOCUS_MODE_FIXED) || focusMode
+				.equals(Parameters.FOCUS_MODE_INFINITY))) {
+				AutoFocusCallback focusCallback = new AutoFocusCallback()
 				{
-					camera.takePicture(shutterCallback, null, jpegCallback);
-					if (!success) {
-						Log.w(TAG, "Unable to focus.");
+					public void onAutoFocus(boolean success, Camera camera)
+					{
+						camera.takePicture(shutterCallback, null, jpegCallback);
+						if (!success) {
+							Log.w(TAG, "Unable to focus.");
+						}
+						camera.cancelAutoFocus();
 					}
-					camera.cancelAutoFocus();
-				}
-			};
-			camera.autoFocus(focusCallback);
-		} else {
-			camera.takePicture(shutterCallback, null, jpegCallback);
+				};
+				camera.autoFocus(focusCallback);
+			} else {
+				camera.takePicture(shutterCallback, null, jpegCallback);
+			}
+		} catch (Exception e) {
+			if (camera != null) {
+				camera.release();
+			}
 		}
 	}
 
@@ -549,7 +560,7 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 			Log.i(TAG, "about to sort");
 			Collections.sort(pictSizes, new Comparator<Camera.Size>() {
 				public int compare(final Camera.Size a, final Camera.Size b) {
-					Log.i(TAG, "sorting");
+					Log.i(TAG, "sorting Size: w:" + a.width + " h:" + a.height);
 					return a.width * a.height - b.width * b.height;
 				}
 			});
@@ -569,7 +580,10 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 			Log.i(TAG, "about to return sizes");
 			
 			param.setPictureSize(theClosestSupportedSize.width, theClosestSupportedSize.height);
+			Log.i(TAG, "Set picture size! w:" + param.getJpegThumbnailSize().width + " h:" + param.getJpegThumbnailSize().height);
+
 			camera.setParameters(param);
+			Log.i(TAG, "Set parameters");
 			
 		} catch (Throwable t) {
 			Log.e(TAG, "Could not set picture size", t);
@@ -629,6 +643,19 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 			}
 		}
 	};
+
+	private void checkWhichCameraAsDefault(){
+		// This is to check if device has only front facing camera
+		// TIMOB-15812: Fix for Devices like Nexus 7 (2012) that only
+		// has front facing camera and no rear camera.
+		PASCameraActivity.getFrontCameraId();
+		PASCameraActivity.getBackCameraId();
+		if (backCameraId == Integer.MIN_VALUE && frontCameraId != Integer.MIN_VALUE) {
+			PASCameraActivity.whichCamera = PicatsizeModule.CAMERA_FRONT;
+		} else {
+			PASCameraActivity.whichCamera = PicatsizeModule.CAMERA_REAR;
+		}
+	}
 
 	private static int getFrontCameraId()
 	{

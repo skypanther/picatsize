@@ -1,0 +1,18 @@
+%define lookup-function-name lookupGeneratedInit
+%define class-name PicatsizeBindings
+%{
+
+#include <string.h>
+#include <v8.h>
+#include <KrollBindings.h>
+
+#include "com.skypanther.picatsize.PicatsizeModule.h"
+#include "com.skypanther.picatsize.ExampleProxy.h"
+
+
+%}
+struct titanium::bindings::BindEntry;
+%%
+com.skypanther.picatsize.PicatsizeModule, ::com::skypanther::picatsize::PicatsizeModule::bindProxy, ::com::skypanther::picatsize::PicatsizeModule::dispose
+com.skypanther.picatsize.ExampleProxy, ::com::skypanther::picatsize::picatsize::ExampleProxy::bindProxy, ::com::skypanther::picatsize::picatsize::ExampleProxy::dispose
+%%

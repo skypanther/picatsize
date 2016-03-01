@@ -1,0 +1,13 @@
+".container": {
+	backgroundColor:"white",
+    layout:"vertical"
+}
+
+".Button": {
+	width: Ti.UI.SIZE,
+	height: 40,
+    top: 20,
+	color: "#000"
+}
+
+

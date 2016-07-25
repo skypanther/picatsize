@@ -580,7 +580,7 @@ public class PASCameraActivity extends TiBaseActivity implements SurfaceHolder.C
 			Log.i(TAG, "about to return sizes");
 			
 			param.setPictureSize(theClosestSupportedSize.width, theClosestSupportedSize.height);
-			Log.i(TAG, "Set picture size! w:" + param.getJpegThumbnailSize().width + " h:" + param.getJpegThumbnailSize().height);
+			Log.i(TAG, "Set picture size! w:" + theClosestSupportedSize.width + " h:" + theClosestSupportedSize.height);
 
 			camera.setParameters(param);
 			Log.i(TAG, "Set parameters");

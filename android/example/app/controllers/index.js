@@ -2,11 +2,24 @@ var pascam = require('com.skypanther.picatsize');
 var targetWidth = 1024;
 var targetHeight = 800;
 
+$.index.addEventListener('open', function () {
+	if (parseInt(Ti.Platform.version.split(".")[0]) >= 6 && !Ti.Media.hasCameraPermissions()) {
+		Ti.Media.requestCameraPermissions(function (e) {
+			if (e.success) {
+				console.log("Camera permission granted.");
+			} else {
+				alert("You have denied the app permission to take pictures. Clicking either button will crash the app.\n\nPlease update the permissions in the Settings app or uninstall and try again.");
+			}
+		});
+	}
+});
 
 function openCameraActivity(e) {
-
-	var overlay = Ti.UI.createView({
-	});
+	if (!Ti.Media.hasCameraPermissions()) {
+		alert('oopsie');
+		return;
+	}
+	var overlay = Ti.UI.createView({});
 
 	var clickBt = Ti.UI.createButton({
 		title: "click me",
@@ -15,7 +28,7 @@ function openCameraActivity(e) {
 	});
 
 	overlay.add(clickBt);
-	clickBt.addEventListener('click', function() {
+	clickBt.addEventListener('click', function () {
 		pascam.takePicture();
 	});
 
@@ -26,7 +39,7 @@ function openCameraActivity(e) {
 	});
 
 	overlay.add(closeBt);
-	closeBt.addEventListener('click', function() {
+	closeBt.addEventListener('click', function () {
 		pascam.hideCamera();
 	});
 
@@ -39,6 +52,7 @@ function openCameraActivity(e) {
 			Ti.API.info("height: " + e.media.height);
 			Ti.API.info("width: " + e.media.width);
 			Ti.API.info("apiName: " + e.media.apiName);
+			$.img.image = e.media;
 			console.log(e);
 			pascam.hideCamera();
 		},
@@ -54,9 +68,10 @@ function openCameraActivity(e) {
 
 
 function openNativeCamera(e) {
-	var targetWidth = 1024;
-	var targetHeight = 800;
-
+	if (!Ti.Media.hasCameraPermissions()) {
+		alert('oopsie');
+		return;
+	}
 	pascam.showCamera({
 		showControls: true,
 		autohide: true,
@@ -75,6 +90,7 @@ function openNativeCamera(e) {
 			var blob = e.media.imageAsResized(e.media.width * scale, e.media.height * scale);
 
 			Ti.API.info("new size: " + blob.width + "x" + blob.height);
+			$.img.image = blob;
 			//blob can be saved to a file if needed
 		},
 		error: function (e) {

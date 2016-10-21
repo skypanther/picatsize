@@ -1,6 +1,6 @@
 /**
  * Appcelerator Titanium Mobile
- * Copyright (c) 2011-2013 by Appcelerator, Inc. All Rights Reserved.
+ * Copyright (c) 2011-2016 by Appcelerator, Inc. All Rights Reserved.
  * Licensed under the terms of the Apache Public License
  * Please see the LICENSE included with this distribution for details.
  */
@@ -20,7 +20,6 @@
 
 
 
-#include "com.skypanther.picatsize.ExampleProxy.h"
 
 #include "org.appcelerator.kroll.KrollModule.h"
 
@@ -28,84 +27,80 @@
 
 using namespace v8;
 
-		namespace com {
-		namespace skypanther {
-		namespace picatsize {
+namespace com {
+namespace skypanther {
+namespace picatsize {
 
 
-Persistent<FunctionTemplate> PicatsizeModule::proxyTemplate = Persistent<FunctionTemplate>();
+Persistent<FunctionTemplate> PicatsizeModule::proxyTemplate;
 jclass PicatsizeModule::javaClass = NULL;
 
 PicatsizeModule::PicatsizeModule(jobject javaObject) : titanium::Proxy(javaObject)
 {
 }
 
-void PicatsizeModule::bindProxy(Handle<Object> exports)
+void PicatsizeModule::bindProxy(Local<Object> exports, Local<Context> context)
 {
-	if (proxyTemplate.IsEmpty()) {
-		getProxyTemplate();
-	}
+	Isolate* isolate = context->GetIsolate();
 
-	// use symbol over string for efficiency
-	Handle<String> nameSymbol = String::NewSymbol("Picatsize");
-
-	Local<Function> proxyConstructor = proxyTemplate->GetFunction();
-	Local<Object> moduleInstance = proxyConstructor->NewInstance();
+	Local<FunctionTemplate> pt = getProxyTemplate(isolate);
+	Local<Function> proxyConstructor = pt->GetFunction(context).ToLocalChecked();
+	Local<String> nameSymbol = NEW_SYMBOL(isolate, "Picatsize"); // use symbol over string for efficiency
+	Local<Object> moduleInstance = proxyConstructor->NewInstance(context).ToLocalChecked();
 	exports->Set(nameSymbol, moduleInstance);
 }
 
-void PicatsizeModule::dispose()
+void PicatsizeModule::dispose(Isolate* isolate)
 {
 	LOGD(TAG, "dispose()");
 	if (!proxyTemplate.IsEmpty()) {
-		proxyTemplate.Dispose();
-		proxyTemplate = Persistent<FunctionTemplate>();
+		proxyTemplate.Reset();
 	}
 
-	titanium::KrollModule::dispose();
+	titanium::KrollModule::dispose(isolate);
 }
 
-Handle<FunctionTemplate> PicatsizeModule::getProxyTemplate()
+Local<FunctionTemplate> PicatsizeModule::getProxyTemplate(Isolate* isolate)
 {
 	if (!proxyTemplate.IsEmpty()) {
-		return proxyTemplate;
+		return proxyTemplate.Get(isolate);
 	}
 
 	LOGD(TAG, "GetProxyTemplate");
 
 	javaClass = titanium::JNIUtil::findClass("com/skypanther/picatsize/PicatsizeModule");
-	HandleScope scope;
+	EscapableHandleScope scope(isolate);
 
 	// use symbol over string for efficiency
-	Handle<String> nameSymbol = String::NewSymbol("Picatsize");
+	Local<String> nameSymbol = NEW_SYMBOL(isolate, "Picatsize");
 
-	Handle<FunctionTemplate> t = titanium::Proxy::inheritProxyTemplate(
-		titanium::KrollModule::getProxyTemplate()
+	Local<FunctionTemplate> t = titanium::Proxy::inheritProxyTemplate(isolate,
+		titanium::KrollModule::getProxyTemplate(isolate)
 , javaClass, nameSymbol);
 
-	proxyTemplate = Persistent<FunctionTemplate>::New(t);
-	proxyTemplate->Set(titanium::Proxy::inheritSymbol,
-		FunctionTemplate::New(titanium::Proxy::inherit<PicatsizeModule>)->GetFunction());
+	proxyTemplate.Reset(isolate, t);
+	t->Set(titanium::Proxy::inheritSymbol.Get(isolate),
+		FunctionTemplate::New(isolate, titanium::Proxy::inherit<PicatsizeModule>)->GetFunction());
 
-	titanium::ProxyFactory::registerProxyPair(javaClass, *proxyTemplate, true);
+	titanium::ProxyFactory::registerProxyPair(javaClass, *t);
 
 	// Method bindings --------------------------------------------------------
-	DEFINE_PROTOTYPE_METHOD(proxyTemplate, "getAvailableCameras", PicatsizeModule::getAvailableCameras);
-	DEFINE_PROTOTYPE_METHOD(proxyTemplate, "takePicture", PicatsizeModule::takePicture);
-	DEFINE_PROTOTYPE_METHOD(proxyTemplate, "getIsCameraSupported", PicatsizeModule::getIsCameraSupported);
-	DEFINE_PROTOTYPE_METHOD(proxyTemplate, "getCameraFlashMode", PicatsizeModule::getCameraFlashMode);
-	DEFINE_PROTOTYPE_METHOD(proxyTemplate, "showCamera", PicatsizeModule::showCamera);
-	DEFINE_PROTOTYPE_METHOD(proxyTemplate, "hideCamera", PicatsizeModule::hideCamera);
-	DEFINE_PROTOTYPE_METHOD(proxyTemplate, "setCameraFlashMode", PicatsizeModule::setCameraFlashMode);
-	DEFINE_PROTOTYPE_METHOD(proxyTemplate, "openPhotoGallery", PicatsizeModule::openPhotoGallery);
-	DEFINE_PROTOTYPE_METHOD(proxyTemplate, "previewImage", PicatsizeModule::previewImage);
-	DEFINE_PROTOTYPE_METHOD(proxyTemplate, "saveToPhotoGallery", PicatsizeModule::saveToPhotoGallery);
-	DEFINE_PROTOTYPE_METHOD(proxyTemplate, "takeScreenshot", PicatsizeModule::takeScreenshot);
-	DEFINE_PROTOTYPE_METHOD(proxyTemplate, "vibrate", PicatsizeModule::vibrate);
-	DEFINE_PROTOTYPE_METHOD(proxyTemplate, "switchCamera", PicatsizeModule::switchCamera);
+	titanium::SetProtoMethod(isolate, t, "getAvailableCameras", PicatsizeModule::getAvailableCameras);
+	titanium::SetProtoMethod(isolate, t, "takePicture", PicatsizeModule::takePicture);
+	titanium::SetProtoMethod(isolate, t, "setCameraFlashMode", PicatsizeModule::setCameraFlashMode);
+	titanium::SetProtoMethod(isolate, t, "openPhotoGallery", PicatsizeModule::openPhotoGallery);
+	titanium::SetProtoMethod(isolate, t, "previewImage", PicatsizeModule::previewImage);
+	titanium::SetProtoMethod(isolate, t, "getIsCameraSupported", PicatsizeModule::getIsCameraSupported);
+	titanium::SetProtoMethod(isolate, t, "saveToPhotoGallery", PicatsizeModule::saveToPhotoGallery);
+	titanium::SetProtoMethod(isolate, t, "takeScreenshot", PicatsizeModule::takeScreenshot);
+	titanium::SetProtoMethod(isolate, t, "vibrate", PicatsizeModule::vibrate);
+	titanium::SetProtoMethod(isolate, t, "getCameraFlashMode", PicatsizeModule::getCameraFlashMode);
+	titanium::SetProtoMethod(isolate, t, "showCamera", PicatsizeModule::showCamera);
+	titanium::SetProtoMethod(isolate, t, "hideCamera", PicatsizeModule::hideCamera);
+	titanium::SetProtoMethod(isolate, t, "switchCamera", PicatsizeModule::switchCamera);
 
-	Local<ObjectTemplate> prototypeTemplate = proxyTemplate->PrototypeTemplate();
-	Local<ObjectTemplate> instanceTemplate = proxyTemplate->InstanceTemplate();
+	Local<ObjectTemplate> prototypeTemplate = t->PrototypeTemplate();
+	Local<ObjectTemplate> instanceTemplate = t->InstanceTemplate();
 
 	// Delegate indexed property get and set to the Java proxy.
 	instanceTemplate->SetIndexedPropertyHandler(titanium::Proxy::getIndexedProperty,
@@ -119,103 +114,111 @@ Handle<FunctionTemplate> PicatsizeModule::getProxyTemplate()
 	}
 
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "VIDEO_PLAYBACK_STATE_STOPPED", 0);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "VIDEO_PLAYBACK_STATE_STOPPED", 0);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "VIDEO_CONTROL_DEFAULT", 0);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "VIDEO_CONTROL_DEFAULT", 0);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "VIDEO_FINISH_REASON_USER_EXITED", 2);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "VIDEO_FINISH_REASON_USER_EXITED", 2);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "VIDEO_CONTROL_NONE", 3);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "VIDEO_CONTROL_NONE", 3);
 
-		DEFINE_STRING_CONSTANT(prototypeTemplate, "MEDIA_TYPE_VIDEO", "public.video");
+		DEFINE_STRING_CONSTANT(isolate, prototypeTemplate, "MEDIA_TYPE_VIDEO", "public.video");
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "VIDEO_PLAYBACK_STATE_INTERRUPTED", 3);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "VIDEO_PLAYBACK_STATE_INTERRUPTED", 3);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "CAMERA_FLASH_OFF", 0);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "CAMERA_FLASH_OFF", 0);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "UNKNOWN_ERROR", -1);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "UNKNOWN_ERROR", -1);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "VIDEO_PLAYBACK_STATE_SEEKING_FORWARD", 4);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "VIDEO_PLAYBACK_STATE_SEEKING_FORWARD", 4);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "NO_ERROR", 0);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "NO_ERROR", 0);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "VIDEO_FINISH_REASON_PLAYBACK_ENDED", 0);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "VIDEO_FINISH_REASON_PLAYBACK_ENDED", 0);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "CAMERA_FLASH_AUTO", 2);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "CAMERA_FLASH_AUTO", 2);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "VIDEO_CONTROL_EMBEDDED", 1);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "VIDEO_CONTROL_EMBEDDED", 1);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "CAMERA_FLASH_ON", 1);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "CAMERA_FLASH_ON", 1);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "CAMERA_REAR", 1);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "CAMERA_REAR", 1);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "VIDEO_CONTROL_FULLSCREEN", 2);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "VIDEO_CONTROL_FULLSCREEN", 2);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "NO_VIDEO", 3);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "NO_VIDEO", 3);
 
-		DEFINE_STRING_CONSTANT(prototypeTemplate, "MEDIA_TYPE_PHOTO", "public.image");
+		DEFINE_STRING_CONSTANT(isolate, prototypeTemplate, "MEDIA_TYPE_PHOTO", "public.image");
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "NO_CAMERA", 2);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "NO_CAMERA", 2);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "DEVICE_BUSY", 1);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "DEVICE_BUSY", 1);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "VIDEO_CONTROL_HIDDEN", 4);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "VIDEO_CONTROL_HIDDEN", 4);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "VIDEO_PLAYBACK_STATE_PAUSED", 2);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "VIDEO_PLAYBACK_STATE_PAUSED", 2);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "VIDEO_SCALING_NONE", 0);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "VIDEO_SCALING_NONE", 0);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "VIDEO_SCALING_ASPECT_FILL", 1);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "CAMERA_FRONT", 0);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "CAMERA_FRONT", 0);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "VIDEO_SCALING_ASPECT_FILL", 1);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "VIDEO_FINISH_REASON_PLAYBACK_ERROR", 1);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "VIDEO_FINISH_REASON_PLAYBACK_ERROR", 1);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "VIDEO_LOAD_STATE_PLAYTHROUGH_OK", 2);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "VIDEO_LOAD_STATE_PLAYTHROUGH_OK", 2);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "VIDEO_LOAD_STATE_PLAYABLE", 1);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "VIDEO_LOAD_STATE_PLAYABLE", 1);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "VIDEO_LOAD_STATE_STALLED", 4);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "VIDEO_LOAD_STATE_STALLED", 4);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "VIDEO_LOAD_STATE_UNKNOWN", 0);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "VIDEO_LOAD_STATE_UNKNOWN", 0);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "VIDEO_SCALING_MODE_FILL", 3);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "VIDEO_SCALING_MODE_FILL", 3);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "VIDEO_SCALING_ASPECT_FIT", 2);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "VIDEO_SCALING_ASPECT_FIT", 2);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "VIDEO_PLAYBACK_STATE_SEEKING_BACKWARD", 5);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "VIDEO_PLAYBACK_STATE_SEEKING_BACKWARD", 5);
 
-		DEFINE_INT_CONSTANT(prototypeTemplate, "VIDEO_PLAYBACK_STATE_PLAYING", 1);
+		DEFINE_INT_CONSTANT(isolate, prototypeTemplate, "VIDEO_PLAYBACK_STATE_PLAYING", 1);
 
 
 	// Dynamic properties -----------------------------------------------------
-	instanceTemplate->SetAccessor(String::NewSymbol("cameraFlashMode"),
-			PicatsizeModule::getter_cameraFlashMode
-			, PicatsizeModule::setter_cameraFlashMode
-, Handle<Value>(), DEFAULT);
-	instanceTemplate->SetAccessor(String::NewSymbol("isCameraSupported"),
-			PicatsizeModule::getter_isCameraSupported
-			, titanium::Proxy::onPropertyChanged
-		, Handle<Value>(), DEFAULT);
-	instanceTemplate->SetAccessor(String::NewSymbol("availableCameras"),
-			PicatsizeModule::getter_availableCameras
-			, titanium::Proxy::onPropertyChanged
-		, Handle<Value>(), DEFAULT);
+	instanceTemplate->SetAccessor(NEW_SYMBOL(isolate, "isCameraSupported"),
+			PicatsizeModule::getter_isCameraSupported,
+			titanium::Proxy::onPropertyChanged,
+			Local<Value>(), DEFAULT,
+			static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete)
+		);
+	instanceTemplate->SetAccessor(NEW_SYMBOL(isolate, "cameraFlashMode"),
+			PicatsizeModule::getter_cameraFlashMode,
+			PicatsizeModule::setter_cameraFlashMode,
+			Local<Value>(), DEFAULT,
+			static_cast<v8::PropertyAttribute>(v8::DontDelete)
+		);
+	instanceTemplate->SetAccessor(NEW_SYMBOL(isolate, "availableCameras"),
+			PicatsizeModule::getter_availableCameras,
+			titanium::Proxy::onPropertyChanged,
+			Local<Value>(), DEFAULT,
+			static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete)
+		);
 
 	// Accessors --------------------------------------------------------------
 
-	return proxyTemplate;
+	return scope.Escape(t);
 }
 
 // Methods --------------------------------------------------------------------
-Handle<Value> PicatsizeModule::getAvailableCameras(const Arguments& args)
+void PicatsizeModule::getAvailableCameras(const FunctionCallbackInfo<Value>& args)
 {
 	LOGD(TAG, "getAvailableCameras()");
-	HandleScope scope;
+	Isolate* isolate = args.GetIsolate();
+	HandleScope scope(isolate);
 
 	JNIEnv *env = titanium::JNIScope::getEnv();
 	if (!env) {
-		return titanium::JSException::GetJNIEnvironmentError();
+		titanium::JSException::GetJNIEnvironmentError(isolate);
+		return;
 	}
 	static jmethodID methodID = NULL;
 	if (!methodID) {
@@ -223,11 +226,18 @@ Handle<Value> PicatsizeModule::getAvailableCameras(const Arguments& args)
 		if (!methodID) {
 			const char *error = "Couldn't find proxy method 'getAvailableCameras' with signature '()[I'";
 			LOGE(TAG, error);
-				return titanium::JSException::Error(error);
+				titanium::JSException::Error(isolate, error);
+				return;
 		}
 	}
 
-	titanium::Proxy* proxy = titanium::Proxy::unwrap(args.Holder());
+	Local<Object> holder = args.Holder();
+	// If holder isn't the JavaObject wrapper we expect, look up the prototype chain
+	if (!JavaObject::isJavaObject(holder)) {
+		holder = holder->FindInstanceInPrototypeChain(getProxyTemplate(isolate));
+	}
+
+	titanium::Proxy* proxy = titanium::Proxy::unwrap(holder);
 
 	jvalue* jArguments = 0;
 
@@ -243,31 +253,34 @@ Handle<Value> PicatsizeModule::getAvailableCameras(const Arguments& args)
 
 
 	if (env->ExceptionCheck()) {
-		Handle<Value> jsException = titanium::JSException::fromJavaException();
+		Local<Value> jsException = titanium::JSException::fromJavaException(isolate);
 		env->ExceptionClear();
-		return jsException;
+		return;
 	}
 
 	if (jResult == NULL) {
-		return Null();
+		args.GetReturnValue().Set(Null(isolate));
+		return;
 	}
 
-	Handle<Array> v8Result = titanium::TypeConverter::javaArrayToJsArray(env, jResult);
+	Local<Array> v8Result = titanium::TypeConverter::javaArrayToJsArray(isolate, env, jResult);
 
 	env->DeleteLocalRef(jResult);
 
 
-	return v8Result;
+	args.GetReturnValue().Set(v8Result);
 
 }
-Handle<Value> PicatsizeModule::takePicture(const Arguments& args)
+void PicatsizeModule::takePicture(const FunctionCallbackInfo<Value>& args)
 {
 	LOGD(TAG, "takePicture()");
-	HandleScope scope;
+	Isolate* isolate = args.GetIsolate();
+	HandleScope scope(isolate);
 
 	JNIEnv *env = titanium::JNIScope::getEnv();
 	if (!env) {
-		return titanium::JSException::GetJNIEnvironmentError();
+		titanium::JSException::GetJNIEnvironmentError(isolate);
+		return;
 	}
 	static jmethodID methodID = NULL;
 	if (!methodID) {
@@ -275,11 +288,18 @@ Handle<Value> PicatsizeModule::takePicture(const Arguments& args)
 		if (!methodID) {
 			const char *error = "Couldn't find proxy method 'takePicture' with signature '()V'";
 			LOGE(TAG, error);
-				return titanium::JSException::Error(error);
+				titanium::JSException::Error(isolate, error);
+				return;
 		}
 	}
 
-	titanium::Proxy* proxy = titanium::Proxy::unwrap(args.Holder());
+	Local<Object> holder = args.Holder();
+	// If holder isn't the JavaObject wrapper we expect, look up the prototype chain
+	if (!JavaObject::isJavaObject(holder)) {
+		holder = holder->FindInstanceInPrototypeChain(getProxyTemplate(isolate));
+	}
+
+	titanium::Proxy* proxy = titanium::Proxy::unwrap(holder);
 
 	jvalue* jArguments = 0;
 
@@ -293,24 +313,263 @@ Handle<Value> PicatsizeModule::takePicture(const Arguments& args)
 
 
 	if (env->ExceptionCheck()) {
-		titanium::JSException::fromJavaException();
+		titanium::JSException::fromJavaException(isolate);
 		env->ExceptionClear();
 	}
 
 
 
 
-	return v8::Undefined();
+	args.GetReturnValue().Set(v8::Undefined(isolate));
 
 }
-Handle<Value> PicatsizeModule::getIsCameraSupported(const Arguments& args)
+void PicatsizeModule::setCameraFlashMode(const FunctionCallbackInfo<Value>& args)
 {
-	LOGD(TAG, "getIsCameraSupported()");
-	HandleScope scope;
+	LOGD(TAG, "setCameraFlashMode()");
+	Isolate* isolate = args.GetIsolate();
+	HandleScope scope(isolate);
 
 	JNIEnv *env = titanium::JNIScope::getEnv();
 	if (!env) {
-		return titanium::JSException::GetJNIEnvironmentError();
+		titanium::JSException::GetJNIEnvironmentError(isolate);
+		return;
+	}
+	static jmethodID methodID = NULL;
+	if (!methodID) {
+		methodID = env->GetMethodID(PicatsizeModule::javaClass, "setCameraFlashMode", "(I)V");
+		if (!methodID) {
+			const char *error = "Couldn't find proxy method 'setCameraFlashMode' with signature '(I)V'";
+			LOGE(TAG, error);
+				titanium::JSException::Error(isolate, error);
+				return;
+		}
+	}
+
+	Local<Object> holder = args.Holder();
+	// If holder isn't the JavaObject wrapper we expect, look up the prototype chain
+	if (!JavaObject::isJavaObject(holder)) {
+		holder = holder->FindInstanceInPrototypeChain(getProxyTemplate(isolate));
+	}
+
+	titanium::Proxy* proxy = titanium::Proxy::unwrap(holder);
+
+	if (args.Length() < 1) {
+		char errorStringBuffer[100];
+		sprintf(errorStringBuffer, "setCameraFlashMode: Invalid number of arguments. Expected 1 but got %d", args.Length());
+		titanium::JSException::Error(isolate, errorStringBuffer);
+		return;
+	}
+
+	jvalue jArguments[1];
+
+
+
+
+	
+
+		if ((titanium::V8Util::isNaN(isolate, args[0]) && !args[0]->IsUndefined()) || args[0]->ToString(isolate)->Length() == 0) {
+			const char *error = "Invalid value, expected type Number.";
+			LOGE(TAG, error);
+			titanium::JSException::Error(isolate, error);
+			return;
+		}
+	if (!args[0]->IsNull()) {
+		Local<Number> arg_0 = args[0]->ToNumber(isolate);
+		jArguments[0].i =
+			titanium::TypeConverter::jsNumberToJavaInt(
+				env, arg_0);
+	} else {
+		jArguments[0].i = NULL;
+	}
+
+	jobject javaProxy = proxy->getJavaObject();
+	env->CallVoidMethodA(javaProxy, methodID, jArguments);
+
+	if (!JavaObject::useGlobalRefs) {
+		env->DeleteLocalRef(javaProxy);
+	}
+
+
+
+	if (env->ExceptionCheck()) {
+		titanium::JSException::fromJavaException(isolate);
+		env->ExceptionClear();
+	}
+
+
+
+
+	args.GetReturnValue().Set(v8::Undefined(isolate));
+
+}
+void PicatsizeModule::openPhotoGallery(const FunctionCallbackInfo<Value>& args)
+{
+	LOGD(TAG, "openPhotoGallery()");
+	Isolate* isolate = args.GetIsolate();
+	HandleScope scope(isolate);
+
+	JNIEnv *env = titanium::JNIScope::getEnv();
+	if (!env) {
+		titanium::JSException::GetJNIEnvironmentError(isolate);
+		return;
+	}
+	static jmethodID methodID = NULL;
+	if (!methodID) {
+		methodID = env->GetMethodID(PicatsizeModule::javaClass, "openPhotoGallery", "(Lorg/appcelerator/kroll/KrollDict;)V");
+		if (!methodID) {
+			const char *error = "Couldn't find proxy method 'openPhotoGallery' with signature '(Lorg/appcelerator/kroll/KrollDict;)V'";
+			LOGE(TAG, error);
+				titanium::JSException::Error(isolate, error);
+				return;
+		}
+	}
+
+	Local<Object> holder = args.Holder();
+	// If holder isn't the JavaObject wrapper we expect, look up the prototype chain
+	if (!JavaObject::isJavaObject(holder)) {
+		holder = holder->FindInstanceInPrototypeChain(getProxyTemplate(isolate));
+	}
+
+	titanium::Proxy* proxy = titanium::Proxy::unwrap(holder);
+
+	if (args.Length() < 1) {
+		char errorStringBuffer[100];
+		sprintf(errorStringBuffer, "openPhotoGallery: Invalid number of arguments. Expected 1 but got %d", args.Length());
+		titanium::JSException::Error(isolate, errorStringBuffer);
+		return;
+	}
+
+	jvalue jArguments[1];
+
+
+
+
+	bool isNew_0;
+
+	if (!args[0]->IsNull()) {
+		Local<Value> arg_0 = args[0];
+		jArguments[0].l =
+			titanium::TypeConverter::jsObjectToJavaKrollDict(
+				isolate,
+				env, arg_0, &isNew_0);
+	} else {
+		jArguments[0].l = NULL;
+	}
+
+	jobject javaProxy = proxy->getJavaObject();
+	env->CallVoidMethodA(javaProxy, methodID, jArguments);
+
+	if (!JavaObject::useGlobalRefs) {
+		env->DeleteLocalRef(javaProxy);
+	}
+
+
+
+			if (isNew_0) {
+				env->DeleteLocalRef(jArguments[0].l);
+			}
+
+
+	if (env->ExceptionCheck()) {
+		titanium::JSException::fromJavaException(isolate);
+		env->ExceptionClear();
+	}
+
+
+
+
+	args.GetReturnValue().Set(v8::Undefined(isolate));
+
+}
+void PicatsizeModule::previewImage(const FunctionCallbackInfo<Value>& args)
+{
+	LOGD(TAG, "previewImage()");
+	Isolate* isolate = args.GetIsolate();
+	HandleScope scope(isolate);
+
+	JNIEnv *env = titanium::JNIScope::getEnv();
+	if (!env) {
+		titanium::JSException::GetJNIEnvironmentError(isolate);
+		return;
+	}
+	static jmethodID methodID = NULL;
+	if (!methodID) {
+		methodID = env->GetMethodID(PicatsizeModule::javaClass, "previewImage", "(Lorg/appcelerator/kroll/KrollDict;)V");
+		if (!methodID) {
+			const char *error = "Couldn't find proxy method 'previewImage' with signature '(Lorg/appcelerator/kroll/KrollDict;)V'";
+			LOGE(TAG, error);
+				titanium::JSException::Error(isolate, error);
+				return;
+		}
+	}
+
+	Local<Object> holder = args.Holder();
+	// If holder isn't the JavaObject wrapper we expect, look up the prototype chain
+	if (!JavaObject::isJavaObject(holder)) {
+		holder = holder->FindInstanceInPrototypeChain(getProxyTemplate(isolate));
+	}
+
+	titanium::Proxy* proxy = titanium::Proxy::unwrap(holder);
+
+	if (args.Length() < 1) {
+		char errorStringBuffer[100];
+		sprintf(errorStringBuffer, "previewImage: Invalid number of arguments. Expected 1 but got %d", args.Length());
+		titanium::JSException::Error(isolate, errorStringBuffer);
+		return;
+	}
+
+	jvalue jArguments[1];
+
+
+
+
+	bool isNew_0;
+
+	if (!args[0]->IsNull()) {
+		Local<Value> arg_0 = args[0];
+		jArguments[0].l =
+			titanium::TypeConverter::jsObjectToJavaKrollDict(
+				isolate,
+				env, arg_0, &isNew_0);
+	} else {
+		jArguments[0].l = NULL;
+	}
+
+	jobject javaProxy = proxy->getJavaObject();
+	env->CallVoidMethodA(javaProxy, methodID, jArguments);
+
+	if (!JavaObject::useGlobalRefs) {
+		env->DeleteLocalRef(javaProxy);
+	}
+
+
+
+			if (isNew_0) {
+				env->DeleteLocalRef(jArguments[0].l);
+			}
+
+
+	if (env->ExceptionCheck()) {
+		titanium::JSException::fromJavaException(isolate);
+		env->ExceptionClear();
+	}
+
+
+
+
+	args.GetReturnValue().Set(v8::Undefined(isolate));
+
+}
+void PicatsizeModule::getIsCameraSupported(const FunctionCallbackInfo<Value>& args)
+{
+	LOGD(TAG, "getIsCameraSupported()");
+	Isolate* isolate = args.GetIsolate();
+	HandleScope scope(isolate);
+
+	JNIEnv *env = titanium::JNIScope::getEnv();
+	if (!env) {
+		titanium::JSException::GetJNIEnvironmentError(isolate);
+		return;
 	}
 	static jmethodID methodID = NULL;
 	if (!methodID) {
@@ -318,11 +577,18 @@ Handle<Value> PicatsizeModule::getIsCameraSupported(const Arguments& args)
 		if (!methodID) {
 			const char *error = "Couldn't find proxy method 'getIsCameraSupported' with signature '()Z'";
 			LOGE(TAG, error);
-				return titanium::JSException::Error(error);
+				titanium::JSException::Error(isolate, error);
+				return;
 		}
 	}
 
-	titanium::Proxy* proxy = titanium::Proxy::unwrap(args.Holder());
+	Local<Object> holder = args.Holder();
+	// If holder isn't the JavaObject wrapper we expect, look up the prototype chain
+	if (!JavaObject::isJavaObject(holder)) {
+		holder = holder->FindInstanceInPrototypeChain(getProxyTemplate(isolate));
+	}
+
+	titanium::Proxy* proxy = titanium::Proxy::unwrap(holder);
 
 	jvalue* jArguments = 0;
 
@@ -338,386 +604,29 @@ Handle<Value> PicatsizeModule::getIsCameraSupported(const Arguments& args)
 
 
 	if (env->ExceptionCheck()) {
-		Handle<Value> jsException = titanium::JSException::fromJavaException();
+		Local<Value> jsException = titanium::JSException::fromJavaException(isolate);
 		env->ExceptionClear();
-		return jsException;
+		return;
 	}
 
 
-	Handle<Boolean> v8Result = titanium::TypeConverter::javaBooleanToJsBoolean(env, jResult);
+	Local<Boolean> v8Result = titanium::TypeConverter::javaBooleanToJsBoolean(isolate, env, jResult);
 
 
 
-	return v8Result;
+	args.GetReturnValue().Set(v8Result);
 
 }
-Handle<Value> PicatsizeModule::getCameraFlashMode(const Arguments& args)
-{
-	LOGD(TAG, "getCameraFlashMode()");
-	HandleScope scope;
-
-	JNIEnv *env = titanium::JNIScope::getEnv();
-	if (!env) {
-		return titanium::JSException::GetJNIEnvironmentError();
-	}
-	static jmethodID methodID = NULL;
-	if (!methodID) {
-		methodID = env->GetMethodID(PicatsizeModule::javaClass, "getCameraFlashMode", "()I");
-		if (!methodID) {
-			const char *error = "Couldn't find proxy method 'getCameraFlashMode' with signature '()I'";
-			LOGE(TAG, error);
-				return titanium::JSException::Error(error);
-		}
-	}
-
-	titanium::Proxy* proxy = titanium::Proxy::unwrap(args.Holder());
-
-	jvalue* jArguments = 0;
-
-	jobject javaProxy = proxy->getJavaObject();
-	jint jResult = (jint)env->CallIntMethodA(javaProxy, methodID, jArguments);
-
-
-
-	if (!JavaObject::useGlobalRefs) {
-		env->DeleteLocalRef(javaProxy);
-	}
-
-
-
-	if (env->ExceptionCheck()) {
-		Handle<Value> jsException = titanium::JSException::fromJavaException();
-		env->ExceptionClear();
-		return jsException;
-	}
-
-
-	Handle<Number> v8Result = titanium::TypeConverter::javaIntToJsNumber(env, jResult);
-
-
-
-	return v8Result;
-
-}
-Handle<Value> PicatsizeModule::showCamera(const Arguments& args)
-{
-	LOGD(TAG, "showCamera()");
-	HandleScope scope;
-
-	JNIEnv *env = titanium::JNIScope::getEnv();
-	if (!env) {
-		return titanium::JSException::GetJNIEnvironmentError();
-	}
-	static jmethodID methodID = NULL;
-	if (!methodID) {
-		methodID = env->GetMethodID(PicatsizeModule::javaClass, "showCamera", "(Ljava/util/HashMap;)V");
-		if (!methodID) {
-			const char *error = "Couldn't find proxy method 'showCamera' with signature '(Ljava/util/HashMap;)V'";
-			LOGE(TAG, error);
-				return titanium::JSException::Error(error);
-		}
-	}
-
-	titanium::Proxy* proxy = titanium::Proxy::unwrap(args.Holder());
-
-	if (args.Length() < 1) {
-		char errorStringBuffer[100];
-		sprintf(errorStringBuffer, "showCamera: Invalid number of arguments. Expected 1 but got %d", args.Length());
-		return ThrowException(Exception::Error(String::New(errorStringBuffer)));
-	}
-
-	jvalue jArguments[1];
-
-
-
-
-	bool isNew_0;
-	
-	if (!args[0]->IsNull()) {
-		Local<Value> arg_0 = args[0];
-		jArguments[0].l =
-			titanium::TypeConverter::jsValueToJavaObject(env, arg_0, &isNew_0);
-	} else {
-		jArguments[0].l = NULL;
-	}
-
-	jobject javaProxy = proxy->getJavaObject();
-	env->CallVoidMethodA(javaProxy, methodID, jArguments);
-
-	if (!JavaObject::useGlobalRefs) {
-		env->DeleteLocalRef(javaProxy);
-	}
-
-
-
-			if (isNew_0) {
-				env->DeleteLocalRef(jArguments[0].l);
-			}
-
-
-	if (env->ExceptionCheck()) {
-		titanium::JSException::fromJavaException();
-		env->ExceptionClear();
-	}
-
-
-
-
-	return v8::Undefined();
-
-}
-Handle<Value> PicatsizeModule::hideCamera(const Arguments& args)
-{
-	LOGD(TAG, "hideCamera()");
-	HandleScope scope;
-
-	JNIEnv *env = titanium::JNIScope::getEnv();
-	if (!env) {
-		return titanium::JSException::GetJNIEnvironmentError();
-	}
-	static jmethodID methodID = NULL;
-	if (!methodID) {
-		methodID = env->GetMethodID(PicatsizeModule::javaClass, "hideCamera", "()V");
-		if (!methodID) {
-			const char *error = "Couldn't find proxy method 'hideCamera' with signature '()V'";
-			LOGE(TAG, error);
-				return titanium::JSException::Error(error);
-		}
-	}
-
-	titanium::Proxy* proxy = titanium::Proxy::unwrap(args.Holder());
-
-	jvalue* jArguments = 0;
-
-	jobject javaProxy = proxy->getJavaObject();
-	env->CallVoidMethodA(javaProxy, methodID, jArguments);
-
-	if (!JavaObject::useGlobalRefs) {
-		env->DeleteLocalRef(javaProxy);
-	}
-
-
-
-	if (env->ExceptionCheck()) {
-		titanium::JSException::fromJavaException();
-		env->ExceptionClear();
-	}
-
-
-
-
-	return v8::Undefined();
-
-}
-Handle<Value> PicatsizeModule::setCameraFlashMode(const Arguments& args)
-{
-	LOGD(TAG, "setCameraFlashMode()");
-	HandleScope scope;
-
-	JNIEnv *env = titanium::JNIScope::getEnv();
-	if (!env) {
-		return titanium::JSException::GetJNIEnvironmentError();
-	}
-	static jmethodID methodID = NULL;
-	if (!methodID) {
-		methodID = env->GetMethodID(PicatsizeModule::javaClass, "setCameraFlashMode", "(I)V");
-		if (!methodID) {
-			const char *error = "Couldn't find proxy method 'setCameraFlashMode' with signature '(I)V'";
-			LOGE(TAG, error);
-				return titanium::JSException::Error(error);
-		}
-	}
-
-	titanium::Proxy* proxy = titanium::Proxy::unwrap(args.Holder());
-
-	if (args.Length() < 1) {
-		char errorStringBuffer[100];
-		sprintf(errorStringBuffer, "setCameraFlashMode: Invalid number of arguments. Expected 1 but got %d", args.Length());
-		return ThrowException(Exception::Error(String::New(errorStringBuffer)));
-	}
-
-	jvalue jArguments[1];
-
-
-
-
-	
-	
-		if ((titanium::V8Util::isNaN(args[0]) && !args[0]->IsUndefined()) || args[0]->ToString()->Length() == 0) {
-			const char *error = "Invalid value, expected type Number.";
-			LOGE(TAG, error);
-			return titanium::JSException::Error(error);
-		}
-	if (!args[0]->IsNull()) {
-		Local<Number> arg_0 = args[0]->ToNumber();
-		jArguments[0].i =
-			titanium::TypeConverter::jsNumberToJavaInt(env, arg_0);
-	} else {
-		jArguments[0].i = NULL;
-	}
-
-	jobject javaProxy = proxy->getJavaObject();
-	env->CallVoidMethodA(javaProxy, methodID, jArguments);
-
-	if (!JavaObject::useGlobalRefs) {
-		env->DeleteLocalRef(javaProxy);
-	}
-
-
-
-	if (env->ExceptionCheck()) {
-		titanium::JSException::fromJavaException();
-		env->ExceptionClear();
-	}
-
-
-
-
-	return v8::Undefined();
-
-}
-Handle<Value> PicatsizeModule::openPhotoGallery(const Arguments& args)
-{
-	LOGD(TAG, "openPhotoGallery()");
-	HandleScope scope;
-
-	JNIEnv *env = titanium::JNIScope::getEnv();
-	if (!env) {
-		return titanium::JSException::GetJNIEnvironmentError();
-	}
-	static jmethodID methodID = NULL;
-	if (!methodID) {
-		methodID = env->GetMethodID(PicatsizeModule::javaClass, "openPhotoGallery", "(Lorg/appcelerator/kroll/KrollDict;)V");
-		if (!methodID) {
-			const char *error = "Couldn't find proxy method 'openPhotoGallery' with signature '(Lorg/appcelerator/kroll/KrollDict;)V'";
-			LOGE(TAG, error);
-				return titanium::JSException::Error(error);
-		}
-	}
-
-	titanium::Proxy* proxy = titanium::Proxy::unwrap(args.Holder());
-
-	if (args.Length() < 1) {
-		char errorStringBuffer[100];
-		sprintf(errorStringBuffer, "openPhotoGallery: Invalid number of arguments. Expected 1 but got %d", args.Length());
-		return ThrowException(Exception::Error(String::New(errorStringBuffer)));
-	}
-
-	jvalue jArguments[1];
-
-
-
-
-	bool isNew_0;
-	
-	if (!args[0]->IsNull()) {
-		Local<Value> arg_0 = args[0];
-		jArguments[0].l =
-			titanium::TypeConverter::jsObjectToJavaKrollDict(env, arg_0, &isNew_0);
-	} else {
-		jArguments[0].l = NULL;
-	}
-
-	jobject javaProxy = proxy->getJavaObject();
-	env->CallVoidMethodA(javaProxy, methodID, jArguments);
-
-	if (!JavaObject::useGlobalRefs) {
-		env->DeleteLocalRef(javaProxy);
-	}
-
-
-
-			if (isNew_0) {
-				env->DeleteLocalRef(jArguments[0].l);
-			}
-
-
-	if (env->ExceptionCheck()) {
-		titanium::JSException::fromJavaException();
-		env->ExceptionClear();
-	}
-
-
-
-
-	return v8::Undefined();
-
-}
-Handle<Value> PicatsizeModule::previewImage(const Arguments& args)
-{
-	LOGD(TAG, "previewImage()");
-	HandleScope scope;
-
-	JNIEnv *env = titanium::JNIScope::getEnv();
-	if (!env) {
-		return titanium::JSException::GetJNIEnvironmentError();
-	}
-	static jmethodID methodID = NULL;
-	if (!methodID) {
-		methodID = env->GetMethodID(PicatsizeModule::javaClass, "previewImage", "(Lorg/appcelerator/kroll/KrollDict;)V");
-		if (!methodID) {
-			const char *error = "Couldn't find proxy method 'previewImage' with signature '(Lorg/appcelerator/kroll/KrollDict;)V'";
-			LOGE(TAG, error);
-				return titanium::JSException::Error(error);
-		}
-	}
-
-	titanium::Proxy* proxy = titanium::Proxy::unwrap(args.Holder());
-
-	if (args.Length() < 1) {
-		char errorStringBuffer[100];
-		sprintf(errorStringBuffer, "previewImage: Invalid number of arguments. Expected 1 but got %d", args.Length());
-		return ThrowException(Exception::Error(String::New(errorStringBuffer)));
-	}
-
-	jvalue jArguments[1];
-
-
-
-
-	bool isNew_0;
-	
-	if (!args[0]->IsNull()) {
-		Local<Value> arg_0 = args[0];
-		jArguments[0].l =
-			titanium::TypeConverter::jsObjectToJavaKrollDict(env, arg_0, &isNew_0);
-	} else {
-		jArguments[0].l = NULL;
-	}
-
-	jobject javaProxy = proxy->getJavaObject();
-	env->CallVoidMethodA(javaProxy, methodID, jArguments);
-
-	if (!JavaObject::useGlobalRefs) {
-		env->DeleteLocalRef(javaProxy);
-	}
-
-
-
-			if (isNew_0) {
-				env->DeleteLocalRef(jArguments[0].l);
-			}
-
-
-	if (env->ExceptionCheck()) {
-		titanium::JSException::fromJavaException();
-		env->ExceptionClear();
-	}
-
-
-
-
-	return v8::Undefined();
-
-}
-Handle<Value> PicatsizeModule::saveToPhotoGallery(const Arguments& args)
+void PicatsizeModule::saveToPhotoGallery(const FunctionCallbackInfo<Value>& args)
 {
 	LOGD(TAG, "saveToPhotoGallery()");
-	HandleScope scope;
+	Isolate* isolate = args.GetIsolate();
+	HandleScope scope(isolate);
 
 	JNIEnv *env = titanium::JNIScope::getEnv();
 	if (!env) {
-		return titanium::JSException::GetJNIEnvironmentError();
+		titanium::JSException::GetJNIEnvironmentError(isolate);
+		return;
 	}
 	static jmethodID methodID = NULL;
 	if (!methodID) {
@@ -725,16 +634,24 @@ Handle<Value> PicatsizeModule::saveToPhotoGallery(const Arguments& args)
 		if (!methodID) {
 			const char *error = "Couldn't find proxy method 'saveToPhotoGallery' with signature '(Ljava/lang/Object;Ljava/util/HashMap;)V'";
 			LOGE(TAG, error);
-				return titanium::JSException::Error(error);
+				titanium::JSException::Error(isolate, error);
+				return;
 		}
 	}
 
-	titanium::Proxy* proxy = titanium::Proxy::unwrap(args.Holder());
+	Local<Object> holder = args.Holder();
+	// If holder isn't the JavaObject wrapper we expect, look up the prototype chain
+	if (!JavaObject::isJavaObject(holder)) {
+		holder = holder->FindInstanceInPrototypeChain(getProxyTemplate(isolate));
+	}
+
+	titanium::Proxy* proxy = titanium::Proxy::unwrap(holder);
 
 	if (args.Length() < 1) {
 		char errorStringBuffer[100];
 		sprintf(errorStringBuffer, "saveToPhotoGallery: Invalid number of arguments. Expected 1 but got %d", args.Length());
-		return ThrowException(Exception::Error(String::New(errorStringBuffer)));
+		titanium::JSException::Error(isolate, errorStringBuffer);
+		return;
 	}
 
 	jvalue jArguments[2];
@@ -743,11 +660,13 @@ Handle<Value> PicatsizeModule::saveToPhotoGallery(const Arguments& args)
 
 
 	bool isNew_0;
-	
+
 	if (!args[0]->IsNull()) {
 		Local<Value> arg_0 = args[0];
 		jArguments[0].l =
-			titanium::TypeConverter::jsValueToJavaObject(env, arg_0, &isNew_0);
+			titanium::TypeConverter::jsValueToJavaObject(
+				isolate,
+				env, arg_0, &isNew_0);
 	} else {
 		jArguments[0].l = NULL;
 	}
@@ -757,11 +676,13 @@ Handle<Value> PicatsizeModule::saveToPhotoGallery(const Arguments& args)
 		jArguments[1].l = NULL;
 
 	} else {
-	
+
 	if (!args[1]->IsNull()) {
 		Local<Value> arg_1 = args[1];
 		jArguments[1].l =
-			titanium::TypeConverter::jsValueToJavaObject(env, arg_1, &isNew_1);
+			titanium::TypeConverter::jsValueToJavaObject(
+				isolate,
+				env, arg_1, &isNew_1);
 	} else {
 		jArguments[1].l = NULL;
 	}
@@ -787,24 +708,26 @@ Handle<Value> PicatsizeModule::saveToPhotoGallery(const Arguments& args)
 
 
 	if (env->ExceptionCheck()) {
-		titanium::JSException::fromJavaException();
+		titanium::JSException::fromJavaException(isolate);
 		env->ExceptionClear();
 	}
 
 
 
 
-	return v8::Undefined();
+	args.GetReturnValue().Set(v8::Undefined(isolate));
 
 }
-Handle<Value> PicatsizeModule::takeScreenshot(const Arguments& args)
+void PicatsizeModule::takeScreenshot(const FunctionCallbackInfo<Value>& args)
 {
 	LOGD(TAG, "takeScreenshot()");
-	HandleScope scope;
+	Isolate* isolate = args.GetIsolate();
+	HandleScope scope(isolate);
 
 	JNIEnv *env = titanium::JNIScope::getEnv();
 	if (!env) {
-		return titanium::JSException::GetJNIEnvironmentError();
+		titanium::JSException::GetJNIEnvironmentError(isolate);
+		return;
 	}
 	static jmethodID methodID = NULL;
 	if (!methodID) {
@@ -812,16 +735,24 @@ Handle<Value> PicatsizeModule::takeScreenshot(const Arguments& args)
 		if (!methodID) {
 			const char *error = "Couldn't find proxy method 'takeScreenshot' with signature '(Lorg/appcelerator/kroll/KrollFunction;)V'";
 			LOGE(TAG, error);
-				return titanium::JSException::Error(error);
+				titanium::JSException::Error(isolate, error);
+				return;
 		}
 	}
 
-	titanium::Proxy* proxy = titanium::Proxy::unwrap(args.Holder());
+	Local<Object> holder = args.Holder();
+	// If holder isn't the JavaObject wrapper we expect, look up the prototype chain
+	if (!JavaObject::isJavaObject(holder)) {
+		holder = holder->FindInstanceInPrototypeChain(getProxyTemplate(isolate));
+	}
+
+	titanium::Proxy* proxy = titanium::Proxy::unwrap(holder);
 
 	if (args.Length() < 1) {
 		char errorStringBuffer[100];
 		sprintf(errorStringBuffer, "takeScreenshot: Invalid number of arguments. Expected 1 but got %d", args.Length());
-		return ThrowException(Exception::Error(String::New(errorStringBuffer)));
+		titanium::JSException::Error(isolate, errorStringBuffer);
+		return;
 	}
 
 	jvalue jArguments[1];
@@ -830,11 +761,13 @@ Handle<Value> PicatsizeModule::takeScreenshot(const Arguments& args)
 
 
 	bool isNew_0;
-	
+
 	if (!args[0]->IsNull()) {
 		Local<Value> arg_0 = args[0];
 		jArguments[0].l =
-			titanium::TypeConverter::jsValueToJavaObject(env, arg_0, &isNew_0);
+			titanium::TypeConverter::jsValueToJavaObject(
+				isolate,
+				env, arg_0, &isNew_0);
 	} else {
 		jArguments[0].l = NULL;
 	}
@@ -854,24 +787,26 @@ Handle<Value> PicatsizeModule::takeScreenshot(const Arguments& args)
 
 
 	if (env->ExceptionCheck()) {
-		titanium::JSException::fromJavaException();
+		titanium::JSException::fromJavaException(isolate);
 		env->ExceptionClear();
 	}
 
 
 
 
-	return v8::Undefined();
+	args.GetReturnValue().Set(v8::Undefined(isolate));
 
 }
-Handle<Value> PicatsizeModule::vibrate(const Arguments& args)
+void PicatsizeModule::vibrate(const FunctionCallbackInfo<Value>& args)
 {
 	LOGD(TAG, "vibrate()");
-	HandleScope scope;
+	Isolate* isolate = args.GetIsolate();
+	HandleScope scope(isolate);
 
 	JNIEnv *env = titanium::JNIScope::getEnv();
 	if (!env) {
-		return titanium::JSException::GetJNIEnvironmentError();
+		titanium::JSException::GetJNIEnvironmentError(isolate);
+		return;
 	}
 	static jmethodID methodID = NULL;
 	if (!methodID) {
@@ -879,11 +814,18 @@ Handle<Value> PicatsizeModule::vibrate(const Arguments& args)
 		if (!methodID) {
 			const char *error = "Couldn't find proxy method 'vibrate' with signature '([J)V'";
 			LOGE(TAG, error);
-				return titanium::JSException::Error(error);
+				titanium::JSException::Error(isolate, error);
+				return;
 		}
 	}
 
-	titanium::Proxy* proxy = titanium::Proxy::unwrap(args.Holder());
+	Local<Object> holder = args.Holder();
+	// If holder isn't the JavaObject wrapper we expect, look up the prototype chain
+	if (!JavaObject::isJavaObject(holder)) {
+		holder = holder->FindInstanceInPrototypeChain(getProxyTemplate(isolate));
+	}
+
+	titanium::Proxy* proxy = titanium::Proxy::unwrap(holder);
 
 
 	jvalue jArguments[1];
@@ -896,11 +838,13 @@ Handle<Value> PicatsizeModule::vibrate(const Arguments& args)
 		jArguments[0].l = NULL;
 
 	} else {
-	
+
 	if (!args[0]->IsNull()) {
-		Local<Array> arg_0 = Local<Array>::Cast(args[0]);
+		Local<Array> arg_0 = args[0].As<Array>();
 		jArguments[0].l =
-			titanium::TypeConverter::jsArrayToJavaLongArray(env, arg_0);
+			titanium::TypeConverter::jsArrayToJavaLongArray(
+				isolate,
+				env, arg_0);
 	} else {
 		jArguments[0].l = NULL;
 	}
@@ -919,94 +863,26 @@ Handle<Value> PicatsizeModule::vibrate(const Arguments& args)
 
 
 	if (env->ExceptionCheck()) {
-		titanium::JSException::fromJavaException();
+		titanium::JSException::fromJavaException(isolate);
 		env->ExceptionClear();
 	}
 
 
 
 
-	return v8::Undefined();
+	args.GetReturnValue().Set(v8::Undefined(isolate));
 
 }
-Handle<Value> PicatsizeModule::switchCamera(const Arguments& args)
+void PicatsizeModule::getCameraFlashMode(const FunctionCallbackInfo<Value>& args)
 {
-	LOGD(TAG, "switchCamera()");
-	HandleScope scope;
+	LOGD(TAG, "getCameraFlashMode()");
+	Isolate* isolate = args.GetIsolate();
+	HandleScope scope(isolate);
 
 	JNIEnv *env = titanium::JNIScope::getEnv();
 	if (!env) {
-		return titanium::JSException::GetJNIEnvironmentError();
-	}
-	static jmethodID methodID = NULL;
-	if (!methodID) {
-		methodID = env->GetMethodID(PicatsizeModule::javaClass, "switchCamera", "(I)V");
-		if (!methodID) {
-			const char *error = "Couldn't find proxy method 'switchCamera' with signature '(I)V'";
-			LOGE(TAG, error);
-				return titanium::JSException::Error(error);
-		}
-	}
-
-	titanium::Proxy* proxy = titanium::Proxy::unwrap(args.Holder());
-
-	if (args.Length() < 1) {
-		char errorStringBuffer[100];
-		sprintf(errorStringBuffer, "switchCamera: Invalid number of arguments. Expected 1 but got %d", args.Length());
-		return ThrowException(Exception::Error(String::New(errorStringBuffer)));
-	}
-
-	jvalue jArguments[1];
-
-
-
-
-	
-	
-		if ((titanium::V8Util::isNaN(args[0]) && !args[0]->IsUndefined()) || args[0]->ToString()->Length() == 0) {
-			const char *error = "Invalid value, expected type Number.";
-			LOGE(TAG, error);
-			return titanium::JSException::Error(error);
-		}
-	if (!args[0]->IsNull()) {
-		Local<Number> arg_0 = args[0]->ToNumber();
-		jArguments[0].i =
-			titanium::TypeConverter::jsNumberToJavaInt(env, arg_0);
-	} else {
-		jArguments[0].i = NULL;
-	}
-
-	jobject javaProxy = proxy->getJavaObject();
-	env->CallVoidMethodA(javaProxy, methodID, jArguments);
-
-	if (!JavaObject::useGlobalRefs) {
-		env->DeleteLocalRef(javaProxy);
-	}
-
-
-
-	if (env->ExceptionCheck()) {
-		titanium::JSException::fromJavaException();
-		env->ExceptionClear();
-	}
-
-
-
-
-	return v8::Undefined();
-
-}
-
-// Dynamic property accessors -------------------------------------------------
-
-Handle<Value> PicatsizeModule::getter_cameraFlashMode(Local<String> property, const AccessorInfo& info)
-{
-	LOGD(TAG, "get cameraFlashMode");
-	HandleScope scope;
-
-	JNIEnv *env = titanium::JNIScope::getEnv();
-	if (!env) {
-		return titanium::JSException::GetJNIEnvironmentError();
+		titanium::JSException::GetJNIEnvironmentError(isolate);
+		return;
 	}
 	static jmethodID methodID = NULL;
 	if (!methodID) {
@@ -1014,15 +890,18 @@ Handle<Value> PicatsizeModule::getter_cameraFlashMode(Local<String> property, co
 		if (!methodID) {
 			const char *error = "Couldn't find proxy method 'getCameraFlashMode' with signature '()I'";
 			LOGE(TAG, error);
-				return titanium::JSException::Error(error);
+				titanium::JSException::Error(isolate, error);
+				return;
 		}
 	}
 
-	titanium::Proxy* proxy = titanium::Proxy::unwrap(info.Holder());
-
-	if (!proxy) {
-		return Undefined();
+	Local<Object> holder = args.Holder();
+	// If holder isn't the JavaObject wrapper we expect, look up the prototype chain
+	if (!JavaObject::isJavaObject(holder)) {
+		holder = holder->FindInstanceInPrototypeChain(getProxyTemplate(isolate));
 	}
+
+	titanium::Proxy* proxy = titanium::Proxy::unwrap(holder);
 
 	jvalue* jArguments = 0;
 
@@ -1038,57 +917,205 @@ Handle<Value> PicatsizeModule::getter_cameraFlashMode(Local<String> property, co
 
 
 	if (env->ExceptionCheck()) {
-		Handle<Value> jsException = titanium::JSException::fromJavaException();
+		Local<Value> jsException = titanium::JSException::fromJavaException(isolate);
 		env->ExceptionClear();
-		return jsException;
-	}
-
-
-	Handle<Number> v8Result = titanium::TypeConverter::javaIntToJsNumber(env, jResult);
-
-
-
-	return v8Result;
-
-}
-
-void PicatsizeModule::setter_cameraFlashMode(Local<String> property, Local<Value> value, const AccessorInfo& info)
-{
-	LOGD(TAG, "set cameraFlashMode");
-	HandleScope scope;
-
-	JNIEnv *env = titanium::JNIScope::getEnv();
-	if (!env) {
-		LOGE(TAG, "Failed to get environment, cameraFlashMode wasn't set");
 		return;
 	}
 
+
+	Local<Number> v8Result = titanium::TypeConverter::javaIntToJsNumber(isolate, env, jResult);
+
+
+
+	args.GetReturnValue().Set(v8Result);
+
+}
+void PicatsizeModule::showCamera(const FunctionCallbackInfo<Value>& args)
+{
+	LOGD(TAG, "showCamera()");
+	Isolate* isolate = args.GetIsolate();
+	HandleScope scope(isolate);
+
+	JNIEnv *env = titanium::JNIScope::getEnv();
+	if (!env) {
+		titanium::JSException::GetJNIEnvironmentError(isolate);
+		return;
+	}
 	static jmethodID methodID = NULL;
 	if (!methodID) {
-		methodID = env->GetMethodID(PicatsizeModule::javaClass, "setCameraFlashMode", "(I)V");
+		methodID = env->GetMethodID(PicatsizeModule::javaClass, "showCamera", "(Ljava/util/HashMap;)V");
 		if (!methodID) {
-			const char *error = "Couldn't find proxy method 'setCameraFlashMode' with signature '(I)V'";
+			const char *error = "Couldn't find proxy method 'showCamera' with signature '(Ljava/util/HashMap;)V'";
 			LOGE(TAG, error);
+				titanium::JSException::Error(isolate, error);
+				return;
 		}
 	}
 
-	titanium::Proxy* proxy = titanium::Proxy::unwrap(info.Holder());
-	if (!proxy) {
+	Local<Object> holder = args.Holder();
+	// If holder isn't the JavaObject wrapper we expect, look up the prototype chain
+	if (!JavaObject::isJavaObject(holder)) {
+		holder = holder->FindInstanceInPrototypeChain(getProxyTemplate(isolate));
+	}
+
+	titanium::Proxy* proxy = titanium::Proxy::unwrap(holder);
+
+	if (args.Length() < 1) {
+		char errorStringBuffer[100];
+		sprintf(errorStringBuffer, "showCamera: Invalid number of arguments. Expected 1 but got %d", args.Length());
+		titanium::JSException::Error(isolate, errorStringBuffer);
 		return;
 	}
 
 	jvalue jArguments[1];
 
+
+
+
+	bool isNew_0;
+
+	if (!args[0]->IsNull()) {
+		Local<Value> arg_0 = args[0];
+		jArguments[0].l =
+			titanium::TypeConverter::jsValueToJavaObject(
+				isolate,
+				env, arg_0, &isNew_0);
+	} else {
+		jArguments[0].l = NULL;
+	}
+
+	jobject javaProxy = proxy->getJavaObject();
+	env->CallVoidMethodA(javaProxy, methodID, jArguments);
+
+	if (!JavaObject::useGlobalRefs) {
+		env->DeleteLocalRef(javaProxy);
+	}
+
+
+
+			if (isNew_0) {
+				env->DeleteLocalRef(jArguments[0].l);
+			}
+
+
+	if (env->ExceptionCheck()) {
+		titanium::JSException::fromJavaException(isolate);
+		env->ExceptionClear();
+	}
+
+
+
+
+	args.GetReturnValue().Set(v8::Undefined(isolate));
+
+}
+void PicatsizeModule::hideCamera(const FunctionCallbackInfo<Value>& args)
+{
+	LOGD(TAG, "hideCamera()");
+	Isolate* isolate = args.GetIsolate();
+	HandleScope scope(isolate);
+
+	JNIEnv *env = titanium::JNIScope::getEnv();
+	if (!env) {
+		titanium::JSException::GetJNIEnvironmentError(isolate);
+		return;
+	}
+	static jmethodID methodID = NULL;
+	if (!methodID) {
+		methodID = env->GetMethodID(PicatsizeModule::javaClass, "hideCamera", "()V");
+		if (!methodID) {
+			const char *error = "Couldn't find proxy method 'hideCamera' with signature '()V'";
+			LOGE(TAG, error);
+				titanium::JSException::Error(isolate, error);
+				return;
+		}
+	}
+
+	Local<Object> holder = args.Holder();
+	// If holder isn't the JavaObject wrapper we expect, look up the prototype chain
+	if (!JavaObject::isJavaObject(holder)) {
+		holder = holder->FindInstanceInPrototypeChain(getProxyTemplate(isolate));
+	}
+
+	titanium::Proxy* proxy = titanium::Proxy::unwrap(holder);
+
+	jvalue* jArguments = 0;
+
+	jobject javaProxy = proxy->getJavaObject();
+	env->CallVoidMethodA(javaProxy, methodID, jArguments);
+
+	if (!JavaObject::useGlobalRefs) {
+		env->DeleteLocalRef(javaProxy);
+	}
+
+
+
+	if (env->ExceptionCheck()) {
+		titanium::JSException::fromJavaException(isolate);
+		env->ExceptionClear();
+	}
+
+
+
+
+	args.GetReturnValue().Set(v8::Undefined(isolate));
+
+}
+void PicatsizeModule::switchCamera(const FunctionCallbackInfo<Value>& args)
+{
+	LOGD(TAG, "switchCamera()");
+	Isolate* isolate = args.GetIsolate();
+	HandleScope scope(isolate);
+
+	JNIEnv *env = titanium::JNIScope::getEnv();
+	if (!env) {
+		titanium::JSException::GetJNIEnvironmentError(isolate);
+		return;
+	}
+	static jmethodID methodID = NULL;
+	if (!methodID) {
+		methodID = env->GetMethodID(PicatsizeModule::javaClass, "switchCamera", "(I)V");
+		if (!methodID) {
+			const char *error = "Couldn't find proxy method 'switchCamera' with signature '(I)V'";
+			LOGE(TAG, error);
+				titanium::JSException::Error(isolate, error);
+				return;
+		}
+	}
+
+	Local<Object> holder = args.Holder();
+	// If holder isn't the JavaObject wrapper we expect, look up the prototype chain
+	if (!JavaObject::isJavaObject(holder)) {
+		holder = holder->FindInstanceInPrototypeChain(getProxyTemplate(isolate));
+	}
+
+	titanium::Proxy* proxy = titanium::Proxy::unwrap(holder);
+
+	if (args.Length() < 1) {
+		char errorStringBuffer[100];
+		sprintf(errorStringBuffer, "switchCamera: Invalid number of arguments. Expected 1 but got %d", args.Length());
+		titanium::JSException::Error(isolate, errorStringBuffer);
+		return;
+	}
+
+	jvalue jArguments[1];
+
+
+
+
 	
-	
-		if ((titanium::V8Util::isNaN(value) && !value->IsUndefined()) || value->ToString()->Length() == 0) {
+
+		if ((titanium::V8Util::isNaN(isolate, args[0]) && !args[0]->IsUndefined()) || args[0]->ToString(isolate)->Length() == 0) {
 			const char *error = "Invalid value, expected type Number.";
 			LOGE(TAG, error);
+			titanium::JSException::Error(isolate, error);
+			return;
 		}
-	if (!value->IsNull()) {
-		Local<Number> arg_0 = value->ToNumber();
+	if (!args[0]->IsNull()) {
+		Local<Number> arg_0 = args[0]->ToNumber(isolate);
 		jArguments[0].i =
-			titanium::TypeConverter::jsNumberToJavaInt(env, arg_0);
+			titanium::TypeConverter::jsNumberToJavaInt(
+				env, arg_0);
 	} else {
 		jArguments[0].i = NULL;
 	}
@@ -1103,24 +1130,28 @@ void PicatsizeModule::setter_cameraFlashMode(Local<String> property, Local<Value
 
 
 	if (env->ExceptionCheck()) {
-		titanium::JSException::fromJavaException();
+		titanium::JSException::fromJavaException(isolate);
 		env->ExceptionClear();
 	}
 
 
 
 
+	args.GetReturnValue().Set(v8::Undefined(isolate));
+
 }
 
+// Dynamic property accessors -------------------------------------------------
 
-Handle<Value> PicatsizeModule::getter_isCameraSupported(Local<String> property, const AccessorInfo& info)
+void PicatsizeModule::getter_isCameraSupported(Local<Name> property, const PropertyCallbackInfo<Value>& args)
 {
-	LOGD(TAG, "get isCameraSupported");
-	HandleScope scope;
+	Isolate* isolate = args.GetIsolate();
+	HandleScope scope(isolate);
 
 	JNIEnv *env = titanium::JNIScope::getEnv();
 	if (!env) {
-		return titanium::JSException::GetJNIEnvironmentError();
+		titanium::JSException::GetJNIEnvironmentError(isolate);
+		return;
 	}
 	static jmethodID methodID = NULL;
 	if (!methodID) {
@@ -1128,14 +1159,16 @@ Handle<Value> PicatsizeModule::getter_isCameraSupported(Local<String> property, 
 		if (!methodID) {
 			const char *error = "Couldn't find proxy method 'getIsCameraSupported' with signature '()Z'";
 			LOGE(TAG, error);
-				return titanium::JSException::Error(error);
+				titanium::JSException::Error(isolate, error);
+				return;
 		}
 	}
 
-	titanium::Proxy* proxy = titanium::Proxy::unwrap(info.Holder());
+	titanium::Proxy* proxy = titanium::Proxy::unwrap(args.Holder());
 
 	if (!proxy) {
-		return Undefined();
+		args.GetReturnValue().Set(Undefined(isolate));
+		return;
 	}
 
 	jvalue* jArguments = 0;
@@ -1152,30 +1185,149 @@ Handle<Value> PicatsizeModule::getter_isCameraSupported(Local<String> property, 
 
 
 	if (env->ExceptionCheck()) {
-		Handle<Value> jsException = titanium::JSException::fromJavaException();
+		Local<Value> jsException = titanium::JSException::fromJavaException(isolate);
 		env->ExceptionClear();
-		return jsException;
+		return;
 	}
 
 
-	Handle<Boolean> v8Result = titanium::TypeConverter::javaBooleanToJsBoolean(env, jResult);
+	Local<Boolean> v8Result = titanium::TypeConverter::javaBooleanToJsBoolean(isolate, env, jResult);
 
 
 
-	return v8Result;
+	args.GetReturnValue().Set(v8Result);
 
 }
 
 
 
-Handle<Value> PicatsizeModule::getter_availableCameras(Local<String> property, const AccessorInfo& info)
+void PicatsizeModule::getter_cameraFlashMode(Local<Name> property, const PropertyCallbackInfo<Value>& args)
 {
-	LOGD(TAG, "get availableCameras");
-	HandleScope scope;
+	Isolate* isolate = args.GetIsolate();
+	HandleScope scope(isolate);
 
 	JNIEnv *env = titanium::JNIScope::getEnv();
 	if (!env) {
-		return titanium::JSException::GetJNIEnvironmentError();
+		titanium::JSException::GetJNIEnvironmentError(isolate);
+		return;
+	}
+	static jmethodID methodID = NULL;
+	if (!methodID) {
+		methodID = env->GetMethodID(PicatsizeModule::javaClass, "getCameraFlashMode", "()I");
+		if (!methodID) {
+			const char *error = "Couldn't find proxy method 'getCameraFlashMode' with signature '()I'";
+			LOGE(TAG, error);
+				titanium::JSException::Error(isolate, error);
+				return;
+		}
+	}
+
+	titanium::Proxy* proxy = titanium::Proxy::unwrap(args.Holder());
+
+	if (!proxy) {
+		args.GetReturnValue().Set(Undefined(isolate));
+		return;
+	}
+
+	jvalue* jArguments = 0;
+
+	jobject javaProxy = proxy->getJavaObject();
+	jint jResult = (jint)env->CallIntMethodA(javaProxy, methodID, jArguments);
+
+
+
+	if (!JavaObject::useGlobalRefs) {
+		env->DeleteLocalRef(javaProxy);
+	}
+
+
+
+	if (env->ExceptionCheck()) {
+		Local<Value> jsException = titanium::JSException::fromJavaException(isolate);
+		env->ExceptionClear();
+		return;
+	}
+
+
+	Local<Number> v8Result = titanium::TypeConverter::javaIntToJsNumber(isolate, env, jResult);
+
+
+
+	args.GetReturnValue().Set(v8Result);
+
+}
+
+void PicatsizeModule::setter_cameraFlashMode(Local<Name> property, Local<Value> value, const PropertyCallbackInfo<void>& args)
+{
+	Isolate* isolate = args.GetIsolate();
+	HandleScope scope(isolate);
+
+	JNIEnv *env = titanium::JNIScope::getEnv();
+	if (!env) {
+		LOGE(TAG, "Failed to get environment, cameraFlashMode wasn't set");
+		return;
+	}
+
+	static jmethodID methodID = NULL;
+	if (!methodID) {
+		methodID = env->GetMethodID(PicatsizeModule::javaClass, "setCameraFlashMode", "(I)V");
+		if (!methodID) {
+			const char *error = "Couldn't find proxy method 'setCameraFlashMode' with signature '(I)V'";
+			LOGE(TAG, error);
+		}
+	}
+
+	titanium::Proxy* proxy = titanium::Proxy::unwrap(args.Holder());
+	if (!proxy) {
+		return;
+	}
+
+	jvalue jArguments[1];
+
+	
+
+		if ((titanium::V8Util::isNaN(isolate, value) && !value->IsUndefined()) || value->ToString(isolate)->Length() == 0) {
+			const char *error = "Invalid value, expected type Number.";
+			LOGE(TAG, error);
+		}
+	if (!value->IsNull()) {
+		Local<Number> arg_0 = value->ToNumber(isolate);
+		jArguments[0].i =
+			titanium::TypeConverter::jsNumberToJavaInt(
+				env, arg_0);
+	} else {
+		jArguments[0].i = NULL;
+	}
+
+	jobject javaProxy = proxy->getJavaObject();
+	env->CallVoidMethodA(javaProxy, methodID, jArguments);
+
+	if (!JavaObject::useGlobalRefs) {
+		env->DeleteLocalRef(javaProxy);
+	}
+
+
+
+	if (env->ExceptionCheck()) {
+		titanium::JSException::fromJavaException(isolate);
+		env->ExceptionClear();
+	}
+
+
+
+
+}
+
+
+void PicatsizeModule::getter_availableCameras(Local<Name> property, const PropertyCallbackInfo<Value>& args)
+{
+	Isolate* isolate = args.GetIsolate();
+	HandleScope scope(isolate);
+
+	JNIEnv *env = titanium::JNIScope::getEnv();
+	if (!env) {
+		titanium::JSException::GetJNIEnvironmentError(isolate);
+		return;
 	}
 	static jmethodID methodID = NULL;
 	if (!methodID) {
@@ -1183,14 +1335,16 @@ Handle<Value> PicatsizeModule::getter_availableCameras(Local<String> property, c
 		if (!methodID) {
 			const char *error = "Couldn't find proxy method 'getAvailableCameras' with signature '()[I'";
 			LOGE(TAG, error);
-				return titanium::JSException::Error(error);
+				titanium::JSException::Error(isolate, error);
+				return;
 		}
 	}
 
-	titanium::Proxy* proxy = titanium::Proxy::unwrap(info.Holder());
+	titanium::Proxy* proxy = titanium::Proxy::unwrap(args.Holder());
 
 	if (!proxy) {
-		return Undefined();
+		args.GetReturnValue().Set(Undefined(isolate));
+		return;
 	}
 
 	jvalue* jArguments = 0;
@@ -1207,27 +1361,28 @@ Handle<Value> PicatsizeModule::getter_availableCameras(Local<String> property, c
 
 
 	if (env->ExceptionCheck()) {
-		Handle<Value> jsException = titanium::JSException::fromJavaException();
+		Local<Value> jsException = titanium::JSException::fromJavaException(isolate);
 		env->ExceptionClear();
-		return jsException;
+		return;
 	}
 
 	if (jResult == NULL) {
-		return Null();
+		args.GetReturnValue().Set(Null(isolate));
+		return;
 	}
 
-	Handle<Array> v8Result = titanium::TypeConverter::javaArrayToJsArray(env, jResult);
+	Local<Array> v8Result = titanium::TypeConverter::javaArrayToJsArray(isolate, env, jResult);
 
 	env->DeleteLocalRef(jResult);
 
 
-	return v8Result;
+	args.GetReturnValue().Set(v8Result);
 
 }
 
 
 
 
-		} // picatsize
-		} // skypanther
-		} // com
+} // picatsize
+} // skypanther
+} // com

@@ -10,12 +10,11 @@
 #include <KrollBindings.h>
 
 #include "com.skypanther.picatsize.PicatsizeModule.h"
-#include "com.skypanther.picatsize.ExampleProxy.h"
 
 
-#line 14 "/private/var/folders/td/gwtt93_563d0h5204_vr8w700000gn/T/timpoulsen/picatsize-generated/KrollGeneratedBindings.gperf"
+#line 13 "/private/var/folders/td/gwtt93_563d0h5204_vr8w700000gn/T/timpoulsen/picatsize-generated/KrollGeneratedBindings.gperf"
 struct titanium::bindings::BindEntry;
-/* maximum key range = 4, duplicates = 0 */
+/* maximum key range = 1, duplicates = 0 */
 
 class PicatsizeBindings
 {
@@ -37,10 +36,10 @@ PicatsizeBindings::lookupGeneratedInit (register const char *str, register unsig
 {
   enum
     {
-      TOTAL_KEYWORDS = 2,
-      MIN_WORD_LENGTH = 37,
+      TOTAL_KEYWORDS = 1,
+      MIN_WORD_LENGTH = 40,
       MAX_WORD_LENGTH = 40,
-      MIN_HASH_VALUE = 37,
+      MIN_HASH_VALUE = 40,
       MAX_HASH_VALUE = 40
     };
 
@@ -50,11 +49,8 @@ PicatsizeBindings::lookupGeneratedInit (register const char *str, register unsig
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""},
-#line 17 "/private/var/folders/td/gwtt93_563d0h5204_vr8w700000gn/T/timpoulsen/picatsize-generated/KrollGeneratedBindings.gperf"
-      {"com.skypanther.picatsize.ExampleProxy", ::com::skypanther::picatsize::picatsize::ExampleProxy::bindProxy, ::com::skypanther::picatsize::picatsize::ExampleProxy::dispose},
-      {""}, {""},
-#line 16 "/private/var/folders/td/gwtt93_563d0h5204_vr8w700000gn/T/timpoulsen/picatsize-generated/KrollGeneratedBindings.gperf"
+      {""}, {""}, {""}, {""},
+#line 15 "/private/var/folders/td/gwtt93_563d0h5204_vr8w700000gn/T/timpoulsen/picatsize-generated/KrollGeneratedBindings.gperf"
       {"com.skypanther.picatsize.PicatsizeModule", ::com::skypanther::picatsize::PicatsizeModule::bindProxy, ::com::skypanther::picatsize::PicatsizeModule::dispose}
     };
 
@@ -72,5 +68,5 @@ PicatsizeBindings::lookupGeneratedInit (register const char *str, register unsig
     }
   return 0;
 }
-#line 18 "/private/var/folders/td/gwtt93_563d0h5204_vr8w700000gn/T/timpoulsen/picatsize-generated/KrollGeneratedBindings.gperf"
+#line 16 "/private/var/folders/td/gwtt93_563d0h5204_vr8w700000gn/T/timpoulsen/picatsize-generated/KrollGeneratedBindings.gperf"
 

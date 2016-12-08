@@ -1,6 +1,7 @@
 <Alloy>
-	<Window class="container">
+	<Window class="container" id="index">
 		<Button id="openCameraActivity" onClick="openCameraActivity">Show Camera w/overlay</Button>
-        <Button id="openNativeCamera" onClick="openNativeCamera">Show native camera</Button>
+        <Button id="openNativeCamera" onClick="openNativeCamera">Show full-screen camera</Button>
+        <ImageView id="img" />
 	</Window>
 </Alloy>

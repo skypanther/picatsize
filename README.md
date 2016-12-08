@@ -1,6 +1,8 @@
 PicAtSize
 ===========================================
 
+Note: Initial support for Titanium 6.0 Beta added. 
+
 PicAtSize is an Android module that lets you take a "_PIC_&#65279;ture _AT_ a _SIZE_" you specify. By taking a  photo smaller than the camera's native size, you create smaller files which are faster to upload, faster to process (resize, crop, rotate), and which create less memory-related issues. It was the memory issue that inspired this module.
 
 Natively, Android supports the `camera.getParameters.setPictureSize()` method. But Titanium's Ti.Media module does not expose this functionality. This module makes that available for you to use.
@@ -41,7 +43,7 @@ Register in the tiapp.xml:
 
 ## USING THE MODULE IN CODE
 
-See the included sample app. You need to create a camera overlay and open the 
+See the included sample app (in the example directory).
 
 ```javascript
 // instantiate and specify your target size

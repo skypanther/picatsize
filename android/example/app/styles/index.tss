@@ -6,8 +6,14 @@
 ".Button": {
 	width: Ti.UI.SIZE,
 	height: 40,
-    top: 20,
+    top: 40,
 	color: "#000"
 }
 
+"#img": {
+	top: 40,
+	width: 1024,
+	height: Ti.UI.SIZE,
+	borderWidth: 1
+}
 

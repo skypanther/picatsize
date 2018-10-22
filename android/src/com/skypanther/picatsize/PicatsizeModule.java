@@ -26,7 +26,6 @@ import org.appcelerator.titanium.ContextSpecific;
 import org.appcelerator.titanium.TiApplication;
 import org.appcelerator.titanium.TiBlob;
 import org.appcelerator.titanium.TiC;
-import org.appcelerator.titanium.TiContext;
 import org.appcelerator.titanium.TiFileProxy;
 import org.appcelerator.titanium.io.TiBaseFile;
 import org.appcelerator.titanium.io.TiFile;
@@ -130,12 +129,6 @@ public class PicatsizeModule extends KrollModule
 	{
 		super();
 	}
-
-	public PicatsizeModule(TiContext tiContext)
-	{
-		this();
-	}
-
 
 	@Kroll.method
 	public void vibrate(@Kroll.argument(optional=true) long[] pattern)
